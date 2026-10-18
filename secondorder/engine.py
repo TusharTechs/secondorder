@@ -345,7 +345,7 @@ class Scenario:
         if room not in self.quiet_rooms:
             self.chapter += 1
             self.room = room
-        t = self._record("enter", text or f"{', '.join(agents)} entered the {room}.", room=room,
+        t = self._record("enter", text or f"{', '.join(agents)} entered the {room}.", room=room, actor=",".join(agents),
                          witnesses=sorted(set(self.present(room)) | set(agents)))
         self.world.query(Q["enter"], dict(agents=agents, room=room, t=t, chapter=self.chapter))
         if room not in self.quiet_rooms:

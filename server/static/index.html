@@ -3,161 +3,230 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>SecondOrder: theory-of-mind memory for AI agents</title>
+<title>SecondOrder · theory-of-mind memory for AI agents on FalkorDB</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+<script src="https://cdn.jsdelivr.net/npm/force-graph@1.47.4/dist/force-graph.min.js"></script>
+<script>
+tailwind.config = { theme: { extend: {
+  colors: { falkor: { DEFAULT: '#7466FF', violet: '#C15CFF', red: '#FF5454', orange: '#FF804D', bg: '#0E0E12', card: '#16161D', line: '#26263A', muted: '#9CA3AF' } },
+  fontFamily: { sans: ['Inter', 'sans-serif'], display: ['"Space Grotesk"', 'sans-serif'], mono: ['"JetBrains Mono"', 'monospace'] } } } };
+</script>
 <style>
-  body { background: #0b0d12; }
-  .card { background: #12151d; border: 1px solid #1f2430; border-radius: 14px; }
-  .chip { font-size: 11px; padding: 2px 8px; border-radius: 999px; }
-  .tab.active { background: #1f2430; color: #fff; }
-  .wrong { color: #fca5a5; }
-  .right { color: #86efac; }
-  .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
-  .bubble { border-left: 2px solid #334155; }
-  .scroll { max-height: 560px; overflow: auto; }
+  :root { --falkor: #7466FF; --grad: linear-gradient(49deg, #C15CFF 0%, #FF5454 100%); }
+  body { background: radial-gradient(1200px 600px at 10% -10%, rgba(116,102,255,.18), transparent 60%), radial-gradient(900px 500px at 100% 0%, rgba(193,92,255,.12), transparent 60%), #0E0E12; }
+  .card { background: rgba(22,22,29,.92); border: 1px solid #26263A; border-radius: 18px; }
+  .grad-text { background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .grad-btn { background: var(--grad); }
+  .btn { background: #7466FF; } .btn:hover { background: #8a7dff; }
+  .chip { font-size: 11px; padding: 2px 9px; border-radius: 999px; }
+  .tab.active { background: #7466FF; color: #fff; }
+  .wrong { color: #FF7A7A; } .right { color: #6EE7B7; }
+  .bubble { border-left: 2px solid #3b3b58; }
+  .scroll { max-height: 520px; overflow: auto; }
+  .fade { animation: fade .45s ease; } @keyframes fade { from { opacity: 0; transform: translateY(4px) } to { opacity: 1 } }
+  .stat .n { font-family: 'Space Grotesk'; font-weight: 700; font-size: 30px; line-height: 1; }
   td, th { padding: 3px 6px; }
-  .cell-ok { background: #14532d55; } .cell-bad { background: #7f1d1d55; } .cell-unk { color:#64748b }
-  .fade { animation: fade .4s ease; } @keyframes fade { from { opacity: 0; transform: translateY(4px) } to { opacity: 1 } }
+  .pulse { animation: pulse 1.6s ease-out 3; } @keyframes pulse { 0% { stroke-width: 7; stroke: #fff } 100% { stroke-width: 1.5 } }
+  @keyframes spin { from { transform: rotate(0deg) } to { transform: rotate(360deg) } }
+  .moons { transform-box: fill-box; transform-origin: center; }
+  .moons > g text { pointer-events: none; }
+  ::-webkit-scrollbar { width: 8px; height: 8px } ::-webkit-scrollbar-thumb { background: #2f2f48; border-radius: 8px }
+  select, input { background: #0E0E12; border: 1px solid #26263A; }
 </style>
 </head>
-<body class="text-slate-200">
+<body class="text-slate-200 font-sans">
+<canvas id="net" style="position:fixed;inset:0;width:100vw;height:100vh;z-index:-1;opacity:.55"></canvas>
 <header class="max-w-7xl mx-auto px-6 pt-8 pb-4">
-  <div class="flex items-end justify-between flex-wrap gap-4">
-    <div>
-      <h1 class="text-3xl font-bold tracking-tight">Second<span class="text-sky-400">Order</span></h1>
-      <p class="text-slate-400 mt-1 max-w-3xl">Agent memory stores what is true, or what <i>I</i> know. SecondOrder also stores
-        what <b>you</b> know, and what you think <b>I</b> know. It gives multi-agent systems theory of mind, with one
-        <span class="text-sky-300">FalkorDB</span> graph per mind.</p>
+  <div class="flex items-start justify-between flex-wrap gap-6">
+    <div class="max-w-3xl">
+      <div class="flex items-center gap-3">
+        <svg width="38" height="38" viewBox="0 0 40 40"><defs><linearGradient id="g" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#C15CFF"/><stop offset="1" stop-color="#FF5454"/></linearGradient></defs>
+          <circle cx="20" cy="20" r="18" fill="none" stroke="url(#g)" stroke-width="3"/><circle cx="16" cy="22" r="9" fill="none" stroke="#7466FF" stroke-width="2.5"/><circle cx="14" cy="24" r="3.5" fill="#7466FF"/></svg>
+        <h1 class="font-display text-4xl font-bold tracking-tight">Second<span class="grad-text">Order</span></h1>
+        <span class="chip bg-falkor/20 text-falkor border border-falkor/40">built on FalkorDB</span>
+      </div>
+      <p class="text-slate-400 mt-3 text-[15px]">Agent memory stores what is true, or what <i>I</i> know. <b class="text-white">SecondOrder also stores what <u>you</u> know, and what you think <u>I</u> know.</b>
+        It gives multi-agent systems theory of mind: one FalkorDB graph per mind, nested perspectives inside, and access rules so each agent reads only its own.</p>
     </div>
-    <nav class="flex gap-1 bg-[#12151d] p-1 rounded-xl border border-[#1f2430]">
-      <button class="tab active px-3 py-1.5 rounded-lg text-sm" data-tab="support">Support crew</button>
-      <button class="tab px-3 py-1.5 rounded-lg text-sm text-slate-400" data-tab="org">Company brain</button>
-      <button class="tab px-3 py-1.5 rounded-lg text-sm text-slate-400" data-tab="hitom">Hi-ToM explorer</button>
-      <button class="tab px-3 py-1.5 rounded-lg text-sm text-slate-400" data-tab="bench">Benchmark</button>
-      <button class="tab px-3 py-1.5 rounded-lg text-sm text-slate-400" data-tab="how">How it works</button>
-    </nav>
+    <div id="hero-stats" class="grid grid-cols-2 gap-3 text-xs min-w-[320px]"></div>
   </div>
+  <nav class="mt-6 inline-flex gap-1 bg-falkor-card p-1 rounded-2xl border border-falkor-line">
+    <button class="tab active px-4 py-2 rounded-xl text-sm" data-tab="support">Support crew</button>
+    <button class="tab px-4 py-2 rounded-xl text-sm text-slate-400" data-tab="org">Company brain</button>
+    <button class="tab px-4 py-2 rounded-xl text-sm text-slate-400" data-tab="hitom">Hi-ToM explorer</button>
+    <button class="tab px-4 py-2 rounded-xl text-sm text-slate-400" data-tab="bench">Benchmarks</button>
+    <button class="tab px-4 py-2 rounded-xl text-sm text-slate-400" data-tab="dev">For developers</button>
+  </nav>
 </header>
 
-<main class="max-w-7xl mx-auto px-6 pb-16">
+<main class="max-w-7xl mx-auto px-6 pb-20">
 <!-- ============================== SUPPORT ============================== -->
 <section id="tab-support">
-  <div class="card p-4 mb-4 text-sm text-slate-300">
-    <b class="text-white">Scenario (synthetic).</b> Maya's lamp arrived cracked. <b>Billing</b> approved a refund in chat. Later, in an internal
-    channel Maya never sees, <b>Finance</b> rejects it and <b>Escalation</b> approves a replacement. Billing has gone off shift, and now
-    <b>Shipping</b>, who saw none of this, is the one Maya talks to. Who believes what, and who <i>thinks</i> who believes what?
-    <div class="mt-3 flex gap-2 flex-wrap">
-      <button onclick="resetScenario('support')" class="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-xs">↺ Reset scenario</button>
+  <div class="card p-5 mb-4 text-sm text-slate-300 flex flex-wrap gap-4 items-center justify-between">
+    <div class="max-w-4xl"><b class="text-white">Scenario (synthetic).</b> Maya's lamp arrived cracked. <b>Billing</b> approved a refund in chat, then told the team.
+      In <span class="font-mono text-falkor">#ops-internal</span>, which Maya never sees, <b>Finance</b> rejects it and <b>Escalation</b> approves a replacement. Billing has gone off shift.
+      Now Maya writes to <b>Shipping</b>, who saw none of it.</div>
+    <button onclick="resetScenario('support')" class="px-3 py-1.5 rounded-lg border border-falkor-line hover:border-falkor text-xs">↺ Reset scenario</button>
+  </div>
+  <div class="card p-0 mb-4 overflow-hidden relative" id="theater-card" style="border-color:#7466FF55; box-shadow: 0 20px 60px rgba(116,102,255,.12)">
+    <div class="flex items-center justify-between px-5 pt-4 flex-wrap gap-2">
+      <div><h3 class="font-display font-semibold text-lg">The Mind Theater <span class="text-xs font-sans font-normal text-slate-500">replayed from FalkorDB with time-travel queries</span></h3>
+        <p class="text-xs text-slate-500">Orbs are agents, moving between channels. Each orb's ring is its own belief about <b class="text-slate-300" id="th-ent-label">the refund</b>. The little moons are what it thinks <i>each other agent</i> believes.
+          <span class="right">green</span> = true, <span class="wrong">red</span> = false, dim = never heard. Events beam only to the agents who witnessed them.</p></div>
+      <div class="flex items-center gap-2 text-xs">
+        <select id="th-entity" class="rounded px-2 py-1" onchange="loadTheater()"></select>
+        <button onclick="thStep(-1)" class="px-2 py-1 rounded border border-falkor-line">◀</button>
+        <button onclick="thToggle()" id="th-play" class="grad-btn px-3 py-1 rounded text-white w-16">Pause</button>
+        <button onclick="thStep(1)" class="px-2 py-1 rounded border border-falkor-line">▶</button>
+      </div>
     </div>
+    <div id="th-caption" class="px-5 mt-1 h-7 font-mono text-[13px] text-slate-200"></div>
+    <div id="theater" class="w-full" style="height:500px"></div>
+    <input id="th-scrub" type="range" min="0" value="0" class="w-full accent-[#7466FF] px-5 mb-4" oninput="thGo(+this.value, true)" />
   </div>
   <div class="grid grid-cols-12 gap-4">
-    <div class="col-span-12 lg:col-span-4 card p-4">
-      <h3 class="font-semibold mb-2">Timeline <span class="text-xs text-slate-500">(dots = who witnessed it)</span></h3>
-      <div id="sup-timeline" class="scroll text-sm space-y-2"></div>
+    <div class="col-span-12 lg:col-span-4 card p-5">
+      <h3 class="font-display font-semibold mb-1">① What happened</h3>
+      <p class="text-xs text-slate-500 mb-3">Dots show who witnessed each event (from the world graph). Faded lines are unrelated channel chatter.</p>
+      <div id="sup-timeline" class="scroll text-sm space-y-2 pr-2"></div>
     </div>
-    <div class="col-span-12 lg:col-span-8 space-y-4">
-      <div class="card p-4">
-        <div class="flex justify-between items-center mb-2"><h3 class="font-semibold">Minds</h3>
-          <span id="sup-stats" class="text-xs text-slate-500 mono"></span></div>
-        <div id="sup-minds" class="grid md:grid-cols-2 xl:grid-cols-3 gap-3"></div>
-      </div>
-      <div class="card p-4">
-        <h3 class="font-semibold mb-2">False beliefs <span class="text-xs text-slate-500">(supervisor view: each perspective vs. ground truth, and the event it missed)</span></h3>
-        <div id="sup-fb" class="text-sm space-y-1"></div>
-      </div>
+    <div class="col-span-12 lg:col-span-8 card p-5">
+      <div class="flex justify-between items-center mb-1 flex-wrap gap-2"><h3 class="font-display font-semibold">② Minds within minds</h3>
+        <div class="flex gap-2 items-center text-xs"><span class="text-slate-500">belief about</span><select id="pack-entity" class="rounded px-2 py-1" onchange="drawPack()"></select>
+          <div class="inline-flex rounded-lg border border-falkor-line overflow-hidden"><button id="v-pack" class="px-2 py-1 bg-falkor/30" onclick="setView('pack')">bubbles</button><button id="v-graph" class="px-2 py-1" onclick="setView('graph')">raw graph</button><button id="v-list" class="px-2 py-1" onclick="setView('list')">list</button></div></div></div>
+      <p class="text-xs text-slate-500 mb-2" id="pack-help"></p>
+      <div id="pack" class="w-full" style="height:470px"></div>
+      <div id="rawgraph" class="w-full hidden rounded-xl overflow-hidden border border-falkor-line" style="height:470px"></div>
+      <div id="sup-minds" class="hidden grid md:grid-cols-2 xl:grid-cols-3 gap-3 scroll"></div>
+      <div id="why" class="text-xs text-slate-300 mt-2 min-h-[20px]"></div>
+      <div class="text-[11px] text-slate-500 font-mono mt-1" id="sup-stats"></div>
     </div>
-    <div class="col-span-12 lg:col-span-5 card p-4">
-      <h3 class="font-semibold mb-1">① Handoff: send only what they don't know</h3>
-      <p class="text-xs text-slate-400 mb-3">Facts where the sender's belief differs from the sender's <i>model of the receiver</i>, plus who else is misinformed.</p>
-      <div class="flex gap-2 items-center text-sm mb-3">
-        <select id="ho-from" class="bg-slate-800 rounded px-2 py-1"></select> →
-        <select id="ho-to" class="bg-slate-800 rounded px-2 py-1"></select>
-        <button onclick="previewHandoff()" class="px-3 py-1 rounded bg-sky-600 hover:bg-sky-500 text-xs">Compute delta</button>
-        <button onclick="commitHandoff()" class="px-3 py-1 rounded bg-emerald-700 hover:bg-emerald-600 text-xs">Send handoff</button>
+    <div class="col-span-12 card p-5">
+      <h3 class="font-display font-semibold mb-1">③ Who is acting on stale information? <span class="text-xs text-slate-500 font-sans font-normal">false_beliefs(): every perspective vs. the world, plus the exact event it missed</span></h3>
+      <div id="sup-fb" class="text-sm space-y-1 mt-2"></div>
+    </div>
+    <div class="col-span-12 lg:col-span-5 card p-5">
+      <h3 class="font-display font-semibold mb-1">④ Handoff: send only what they don't know</h3>
+      <p class="text-xs text-slate-500 mb-3">handoff_delta(): facts where the sender's belief differs from the sender's <i>model of the receiver</i>, plus who else is misinformed.</p>
+      <div class="flex gap-2 items-center text-sm mb-3 flex-wrap">
+        <select id="ho-from" class="rounded px-2 py-1"></select> → <select id="ho-to" class="rounded px-2 py-1"></select>
+        <button onclick="previewHandoff()" class="btn px-3 py-1 rounded-lg text-xs text-white">Compute delta</button>
+        <button onclick="commitHandoff()" class="grad-btn px-3 py-1 rounded-lg text-xs text-white">Send handoff</button>
       </div>
       <div id="ho-out" class="text-sm"></div>
     </div>
-    <div class="col-span-12 lg:col-span-7 card p-4">
-      <h3 class="font-semibold mb-1">② Maya writes to Shipping, and two Claude agents reply</h3>
-      <p class="text-xs text-slate-400 mb-3">Same model (Claude Opus 5.5), same facts. Left: a normal agent memory. Right: SecondOrder, where the agent can also ask what it thinks <i>Maya</i> believes. Each agent reads only its own mind graph through a FalkorDB ACL user.</p>
+    <div class="col-span-12 lg:col-span-7 card p-5">
+      <h3 class="font-display font-semibold mb-1">⑤ Maya writes to Shipping, and two Claude agents reply</h3>
+      <p class="text-xs text-slate-500 mb-3">Same model (Claude Opus 5.5), same facts. Left: a normal agent memory. Right: SecondOrder, where the agent can also ask what it thinks <i>Maya</i> believes. Each agent reads only its own mind graph through a FalkorDB ACL user.</p>
       <div class="flex gap-2 mb-3">
-        <input id="ag-msg" class="flex-1 bg-slate-800 rounded px-3 py-1.5 text-sm" value="Hi! Any update on order #4411?" />
-        <button onclick="runAgents()" id="ag-btn" class="px-3 py-1.5 rounded bg-sky-600 hover:bg-sky-500 text-sm">Run agents</button>
+        <input id="ag-msg" class="flex-1 rounded-lg px-3 py-1.5 text-sm" value="Hi! Any update on order #4411?" />
+        <button onclick="runAgents()" id="ag-btn" class="btn px-4 py-1.5 rounded-lg text-sm text-white">Run agents</button>
       </div>
       <div id="ag-out" class="grid md:grid-cols-2 gap-3 text-sm"></div>
       <div id="acl-out" class="mt-3 text-xs text-slate-400"></div>
+    </div>
+    <div class="col-span-12 card p-5" style="border-color:#7466FF66">
+      <h3 class="font-display font-semibold mb-1">⑥ Your turn: make something happen</h3>
+      <p class="text-xs text-slate-500 mb-3">Describe an event in plain English. Claude turns it into perception events (who joined, who said what, who whispered to whom), FalkorDB routes it into exactly the minds that witnessed it, and the changed perspectives pulse in ②.</p>
+      <div class="flex gap-2 flex-wrap">
+        <input id="ev-text" class="flex-1 min-w-[300px] rounded-lg px-3 py-1.5 text-sm" placeholder="e.g. Escalation privately tells Billing that the replacement was approved" />
+        <button onclick="composeEvent()" id="ev-btn" class="grad-btn px-4 py-1.5 rounded-lg text-sm text-white">Apply event</button>
+      </div>
+      <div class="flex gap-2 mt-2 flex-wrap text-xs">
+        <button class="chip border border-falkor-line hover:border-falkor" onclick="ev('Escalation privately tells Billing that the replacement for 4411 was approved')">Escalation whispers to Billing</button>
+        <button class="chip border border-falkor-line hover:border-falkor" onclick="ev('Maya and Finance join a call; Finance explains the refund for 4411 was rejected and a replacement is coming')">Finance calls Maya</button>
+        <button class="chip border border-falkor-line hover:border-falkor" onclick="ev('Shipping marks the replacement for 4411 as shipped in #ops-internal while nobody else is there')">Shipping ships it, alone</button>
+      </div>
+      <div id="ev-out" class="text-xs mt-3"></div>
     </div>
   </div>
 </section>
 
 <!-- ============================== ORG ============================== -->
 <section id="tab-org" class="hidden">
-  <div class="card p-4 mb-4 text-sm text-slate-300"><b class="text-white">Company brain (synthetic org).</b> At all-hands, the deploy freeze was set
-    to "this Friday" and launch to Nov 3. Then in a thread only Asha, Chen and Dara saw, launch slipped to Nov 10 and the freeze moved.
-    Dara mentions Eli's team is rushing a migration before "this Friday". Who is out of the loop, and what is the cheapest way to fix it?
-    <button onclick="resetScenario('org')" class="ml-2 px-2 py-1 rounded bg-slate-700 text-xs">↺ Reset</button></div>
+  <div class="card p-5 mb-4 text-sm text-slate-300"><b class="text-white">Company brain (synthetic org).</b> At all-hands the deploy freeze was set for "this Friday" and launch for Nov 3.
+    Then, in a thread only Asha, Chen and Dara saw, launch slipped to Nov 10 and the freeze moved. Dara mentions Eli's team is rushing a migration in before "this Friday".
+    Who is out of the loop, and what is the cheapest way to fix it, including what people believe <i>about each other</i>?
+    <button onclick="resetScenario('org')" class="ml-2 px-2 py-1 rounded-lg border border-falkor-line text-xs">↺ Reset</button></div>
   <div class="grid grid-cols-12 gap-4">
-    <div class="col-span-12 lg:col-span-5 card p-4"><h3 class="font-semibold mb-2">Who knows?</h3><div id="org-who" class="text-sm"></div></div>
-    <div class="col-span-12 lg:col-span-7 card p-4"><h3 class="font-semibold mb-2">Plan announcements <span class="text-xs text-slate-500">(simulated on GRAPH.COPY forks)</span></h3>
-      <div class="flex gap-2 mb-2 text-sm"><select id="plan-entity" class="bg-slate-800 rounded px-2 py-1"></select>
-      <button onclick="runPlan()" class="px-3 py-1 rounded bg-sky-600 text-xs">Plan</button></div>
+    <div class="col-span-12 lg:col-span-5 card p-5"><h3 class="font-display font-semibold mb-2">Who knows? <span class="text-xs text-slate-500 font-sans">who_knows()</span></h3><div id="org-who" class="text-sm"></div></div>
+    <div class="col-span-12 lg:col-span-7 card p-5"><h3 class="font-display font-semibold mb-2">Plan the fix <span class="text-xs text-slate-500 font-sans">each plan is simulated on a GRAPH.COPY fork of every graph</span></h3>
+      <div class="flex gap-2 mb-3 text-sm"><select id="plan-entity" class="rounded px-2 py-1"></select>
+      <button onclick="runPlan()" class="btn px-3 py-1 rounded-lg text-xs text-white">Simulate plans</button></div>
       <div id="org-plan" class="text-sm"></div></div>
-    <div class="col-span-12 card p-4"><h3 class="font-semibold mb-2">False beliefs, including second-order ("Dara thinks Eli believes…")</h3><div id="org-fb" class="text-sm space-y-1"></div></div>
+    <div class="col-span-12 card p-5"><h3 class="font-display font-semibold mb-2">False beliefs, including second-order ("Dara thinks Eli believes…")</h3><div id="org-fb" class="text-sm space-y-1"></div></div>
   </div>
 </section>
 
 <!-- ============================== HITOM ============================== -->
 <section id="tab-hitom" class="hidden">
-  <div class="card p-4 mb-4 text-sm text-slate-300"><b class="text-white">Hi-ToM</b> (He et al., EMNLP 2023): stories where agents enter and leave
-    rooms, move objects, lie and whisper, and questions up to <b>4th-order</b> ("Where does A think B thinks C thinks D thinks the carrot is?").
-    Pick a question to see SecondOrder build the minds in FalkorDB, the belief of each nested perspective at every step, and what Claude answered without the graph.
-    <div class="mt-2 flex gap-2 items-center"><span>order</span><select id="ht-order" class="bg-slate-800 rounded px-2 py-1">
+  <div class="card p-5 mb-4 text-sm text-slate-300"><b class="text-white">Hi-ToM</b> (He et al., EMNLP 2023): agents enter and leave rooms, move objects, lie in public and whisper in private.
+    Questions go up to <b>4th order</b>: "Where does A think B thinks C thinks D thinks the carrot is?" Pick one to watch SecondOrder build the minds in FalkorDB.
+    You'll see every nested perspective's belief at every step, the reasoning read level by level from the graph, and what Claude answered without it.
+    <div class="mt-3 flex gap-2 items-center"><span>order</span><select id="ht-order" class="rounded px-2 py-1">
       <option>4</option><option>3</option><option>2</option><option>1</option><option>0</option></select>
-      <label><input type="checkbox" id="ht-dec" checked> deception</label>
-      <button onclick="loadHitomList()" class="px-3 py-1 rounded bg-sky-600 text-xs">List</button></div></div>
+      <label class="text-xs"><input type="checkbox" id="ht-dec" checked> with deception</label>
+      <button onclick="loadHitomList()" class="btn px-3 py-1 rounded-lg text-xs text-white">List questions</button></div></div>
   <div class="grid grid-cols-12 gap-4">
     <div class="col-span-12 lg:col-span-3 card p-3 scroll text-xs" id="ht-list"></div>
-    <div class="col-span-12 lg:col-span-9 card p-4" id="ht-item"><div class="text-slate-500 text-sm">Select a question.</div></div>
+    <div class="col-span-12 lg:col-span-9 card p-5" id="ht-item"><div class="text-slate-500 text-sm">Select a question.</div></div>
   </div>
 </section>
 
 <!-- ============================== BENCH ============================== -->
 <section id="tab-bench" class="hidden">
   <div class="grid grid-cols-12 gap-4">
-    <div class="col-span-12 lg:col-span-8 card p-4"><h3 class="font-semibold mb-2">Accuracy by belief order on Hi-ToM (1,200 questions)</h3><canvas id="bench-chart" height="140"></canvas></div>
-    <div class="col-span-12 lg:col-span-4 card p-4 text-sm" id="bench-side"></div>
-    <div class="col-span-12 card p-4 text-sm" id="bench-table"></div>
+    <div class="col-span-12 lg:col-span-8 card p-5"><h3 class="font-display font-semibold mb-1">Hi-ToM accuracy by belief order (all 1,200 questions)</h3>
+      <p class="text-xs text-slate-500 mb-2">Scored against Hi-ToM's own reference Oracle code, replayed unmodified on every story. Scores against the released JSON labels are in the table.</p>
+      <canvas id="bench-chart" height="140"></canvas></div>
+    <div class="col-span-12 lg:col-span-4 card p-5 text-sm" id="bench-side"></div>
+    <div class="col-span-12 card p-5 text-sm overflow-x-auto" id="bench-table"></div>
+    <div class="col-span-12 lg:col-span-6 card p-5"><h3 class="font-display font-semibold mb-1">Multi-tenant scale: one FalkorDB, 10,200 graphs</h3>
+      <p class="text-xs text-slate-500 mb-2">1,700 isolated scenarios (1 world + 5 mind graphs each). Event-routing latency stays flat as graphs are added.</p><canvas id="scale-chart" height="170"></canvas></div>
+    <div class="col-span-12 lg:col-span-6 card p-5 text-sm"><h3 class="font-display font-semibold mb-1">Agents × depth, index on/off</h3>
+      <p class="text-xs text-slate-500 mb-2">One broadcast event, median ms. A range index on <span class="font-mono">Perspective(chain)</span> matters at scale.</p><div id="scale-table" class="overflow-x-auto"></div></div>
   </div>
 </section>
 
-<!-- ============================== HOW ============================== -->
-<section id="tab-how" class="hidden">
+<!-- ============================== DEV ============================== -->
+<section id="tab-dev" class="hidden">
   <div class="grid md:grid-cols-2 gap-4 text-sm">
-    <div class="card p-4"><h3 class="font-semibold mb-2">Graph layout: many graphs, one FalkorDB</h3>
-<pre class="mono text-xs text-slate-300 whitespace-pre-wrap">so:&lt;sid&gt;:world           ground truth + who witnessed what
-  (:Agent)-[:WITNESSED]->(:Event)-[:ABOUT]->(:Entity)-[:IS]->(:Value)
-  (:Agent)-[:IN|EXITED {t,chapter}]->(:Room)   (:Agent)-[:TOLD]->(:Agent)
+    <div class="card p-5"><h3 class="font-display font-semibold mb-2">5-line quickstart</h3>
+<pre class="font-mono text-xs text-slate-300 whitespace-pre-wrap bg-black/30 rounded-lg p-3">pip install git+https://github.com/TusharTechs/secondorder
 
-so:&lt;sid&gt;:mind:&lt;agent&gt;    everything that agent believes
-  (:Perspective {chain:'Maya'})
-  (:Perspective {chain:'Shipping>Maya'})  what Shipping thinks Maya believes
-  (child)-[:INHERITS]->(parent)
-  (:Perspective)-[:BELIEVES {entity, active, t, via, src}]->(:Value)</pre>
-      <p class="mt-2 text-slate-400">A perspective stores only where it <b>diverges</b> from its parent. When an event happens, every perspective whose members all
-        witnessed it is updated. Children that did not witness it are first frozen at their old value (copy-on-write per belief edge).
-        Reading a 4th-order belief is one Cypher walk up the <code>INHERITS</code> tree.</p></div>
-    <div class="card p-4"><h3 class="font-semibold mb-2">Why one graph per agent</h3>
-      <p class="text-slate-400">Each agent connects as its own FalkorDB ACL user allowed only <code>GRAPH.RO_QUERY</code> on
-        <code>so:*:mind:&lt;agent&gt;</code>. It can ask what it believes and what it thinks others believe, but it cannot read the world graph or
-        another agent's mind. That is theory of mind, not omniscience. Supervisors and the planner use the world graph.</p>
-      <h3 class="font-semibold mt-4 mb-2">Resolve a nested belief (Cypher)</h3>
-<pre class="mono text-xs text-slate-300 whitespace-pre-wrap">MATCH (p:Perspective) WHERE p.chain IN $prefixes
+from secondorder import Memory
+mem = Memory("support")                                  # embedded FalkorDB, or host=...
+mem.join(["Maya", "Billing"], "chat")
+mem.say("Billing", "refund", "approved", room="chat")
+mem.leave("Maya"); mem.set("refund", "rejected", room="chat", by="Finance")
+mem.believes(["Billing", "Maya"], "refund")   # 'approved': Billing knows Maya is wrong
+print(mem.context_for("Billing", talking_to="Maya"))   # prepend to any LLM prompt</pre>
+      <h3 class="font-display font-semibold mt-4 mb-2">MCP: give any agent a theory of mind</h3>
+<pre class="font-mono text-xs text-slate-300 whitespace-pre-wrap bg-black/30 rounded-lg p-3">claude mcp add secondorder -- python mcp_server.py                     # supervisor tools
+claude mcp add shipping -e SO_AGENT=Shipping -- python mcp_server.py  # ACL-scoped agent</pre></div>
+    <div class="card p-5"><h3 class="font-display font-semibold mb-2">Graph layout: many graphs, one FalkorDB</h3>
+<pre class="font-mono text-xs text-slate-300 whitespace-pre-wrap bg-black/30 rounded-lg p-3">so:&lt;sid&gt;:world          ground truth + who witnessed what
+  (:Agent)-[:WITNESSED]->(:Event)-[:ABOUT]->(:Entity)-[:IS]->(:Value)
+  (:Agent)-[:IN|EXITED {t}]->(:Room)   (:Agent)-[:TOLD]->(:Agent)
+so:&lt;sid&gt;:mind:&lt;agent&gt;   one graph per agent (ACL boundary)
+  (:Perspective {chain:'Shipping>Maya'})-[:INHERITS]->(:Perspective {chain:'Shipping'})
+  (:Perspective)-[:BELIEVES {entity, active, t, until, via, src}]->(:Value)</pre>
+      <p class="mt-3 text-slate-400">A perspective stores only where it <b>diverges</b> from its parent. An event updates every perspective whose members all witnessed it. Children that didn't witness it are first frozen at their old value: <b>copy-on-write per belief edge</b>. Reading a 4th-order belief is one Cypher walk up <span class="font-mono">INHERITS</span>.</p>
+<pre class="font-mono text-xs text-slate-300 whitespace-pre-wrap bg-black/30 rounded-lg p-3 mt-3">MATCH (p:Perspective) WHERE p.chain IN $prefixes
 WITH p ORDER BY p.depth DESC LIMIT 1
 MATCH path = (p)-[:INHERITS*0..6]->(q:Perspective)
       -[b:BELIEVES {entity: $entity, active: true}]->(v:Value)
-RETURN v.name, b.via, b.t, b.src, q.chain, length(path)
-ORDER BY length(path) ASC LIMIT 1</pre></div>
+RETURN v.name, b.via, b.src, q.chain ORDER BY length(path) LIMIT 1</pre></div>
+    <div class="card p-5 md:col-span-2"><h3 class="font-display font-semibold mb-2">Why this belongs in FalkorDB's agent stack</h3>
+      <div class="grid md:grid-cols-3 gap-4 text-slate-400">
+        <div><b class="text-white">Multigraph as a security boundary.</b> FalkorDB's thousands-of-graphs-per-instance design is exactly what per-agent minds need. An ACL key pattern per agent turns "isolation" into theory of mind with access control.</div>
+        <div><b class="text-white">A context layer, not a bigger context window.</b> Handoffs shrink from the whole transcript to the delta the receiver lacks (806 → 48 tokens). Corrections target the person who is actually wrong.</div>
+        <div><b class="text-white">Composable.</b> Graphiti, Mem0 or Cognee store <i>facts</i>. SecondOrder stores <i>who knows them</i>. It's a thin layer you can put next to any of them, with an MCP server, a Python API and 26 documented Cypher queries.</div>
+      </div></div>
   </div>
 </section>
 </main>
@@ -165,155 +234,368 @@ ORDER BY length(path) ASC LIMIT 1</pre></div>
 <script>
 const $ = (s) => document.querySelector(s);
 const api = async (url, opts) => { const r = await fetch(url, opts); if (!r.ok) throw new Error(await r.text()); return r.json(); };
-const COLORS = ["#38bdf8","#f472b6","#a78bfa","#34d399","#fbbf24","#fb7185","#22d3ee","#c084fc"];
-let AG = {}; const color = (a) => AG[a] || "#94a3b8";
+const PALETTE = ["#7466FF", "#C15CFF", "#FF5454", "#FF804D", "#10b981", "#38bdf8", "#fbbf24", "#f472b6"];
+let AG = {}, ST = null, VIEW = 'pack', CHANGED = new Set();
+const color = (a) => AG[a] || "#9CA3AF";
+const post = (url, body) => api(url, {method: "POST", headers: {"content-type": "application/json"}, body: JSON.stringify(body || {})});
+const PACK_HELP = "Each outer circle is an agent's FalkorDB graph. Inner circles are what it thinks others believe, and what it thinks they think. <span class='right'>green</span> = matches the world, <span class='wrong'>red</span> = false belief, grey = never heard. Click a circle to see why.";
 
 document.querySelectorAll(".tab").forEach(b => b.onclick = () => {
   document.querySelectorAll(".tab").forEach(x => { x.classList.remove("active"); x.classList.add("text-slate-400"); });
   b.classList.add("active"); b.classList.remove("text-slate-400");
-  ["support","org","hitom","bench","how"].forEach(t => $("#tab-"+t).classList.toggle("hidden", t !== b.dataset.tab));
+  ["support", "org", "hitom", "bench", "dev"].forEach(t => $("#tab-" + t).classList.toggle("hidden", t !== b.dataset.tab));
   if (b.dataset.tab === "org") loadOrg();
   if (b.dataset.tab === "bench") loadBench();
   if (b.dataset.tab === "hitom" && !$("#ht-list").innerHTML) loadHitomList();
 });
 
-function dots(ws) { return ws.map(w => `<span title="${w}" class="inline-block w-2.5 h-2.5 rounded-full mr-0.5" style="background:${color(w)}"></span>`).join(""); }
-function agentTag(a) { return `<span class="font-semibold" style="color:${color(a)}">${a}</span>`; }
+const dots = (ws) => ws.map(w => `<span title="${w}" class="inline-block w-2.5 h-2.5 rounded-full mr-0.5" style="background:${color(w)}"></span>`).join("");
+const tag = (a) => `<span class="font-semibold" style="color:${color(a)}">${a}</span>`;
+const tagAll = (s) => s.replace(/\b(Maya|Billing|Shipping|Escalation|Finance|Asha|Ben|Chen|Dara|Eli|Fatima|Gus)\b/g, m => tag(m));
+
+async function heroStats() {
+  const s = await api("/api/eval").catch(() => ({}));
+  const sc = await api("/api/scale").catch(() => ({}));
+  const so = s.series ? s.series[0] : null, op = s.series ? s.series.find(x => x.name.includes("Opus")) : null;
+  const avg = (x) => x ? (x.acc.reduce((a, b) => a + b, 0) / x.acc.length) : null;
+  const last = sc.multitenant ? sc.multitenant.rows.slice(-1)[0] : null;
+  $("#hero-stats").innerHTML = [
+    [so ? `${avg(so).toFixed(0)}%` : "–", "Hi-ToM (vs. reference oracle), avg over orders 0–4", "grad-text"],
+    [op ? `${avg(op).toFixed(0)}%` : "–", "Claude Opus 5.5 alone, same questions", "text-slate-300"],
+    ["806→48", "tokens per handoff (delta vs. transcript)", "text-white"],
+    [last ? `${(last.graphs / 1000).toFixed(1)}k` : "10k", `graphs in one FalkorDB · ${last ? last.event_p50_ms : "~3"} ms p50 per event`, "text-white"],
+  ].map(([n, l, c]) => `<div class="card px-3 py-2 stat"><div class="n ${c}">${n}</div><div class="text-slate-500 mt-1">${l}</div></div>`).join("");
+}
+
+// ---------------------------------------------------------------- belief resolution on the client (same rule as the Cypher read)
+function ownBeliefs(st) { const m = {}; for (const a of st.agents) for (const p of (st.minds[a] || [])) m[p.chain] = Object.fromEntries(p.beliefs.map(b => [b.entity, b])); return m; }
+function resolve(own, chain, ent) { const parts = chain.split(">"); for (let k = parts.length; k >= 1; k--) { const c = parts.slice(0, k).join(">"); if (own[c] && own[c][ent]) return {...own[c][ent], held_by: c}; } return null; }
+
+function packData(st, ent) {
+  const own = ownBeliefs(st);
+  const all = new Set(); st.agents.forEach(a => (st.minds[a] || []).forEach(p => all.add(p.chain)));
+  const node = (chain) => {
+    const kids = chain.split(">").length >= 2 ? [] : [...all].filter(c => c.startsWith(chain + ">") && c.split(">").length === chain.split(">").length + 1);
+    const b = resolve(own, chain, ent);
+    return {name: chain, b, children: kids.length ? kids.map(node) : undefined, value: kids.length ? undefined : 1};
+  };
+  return {name: "root", children: st.agents.map(a => node(a))};
+}
+
+function drawPack() {
+  if (!ST) return; const ent = $("#pack-entity").value; const truth = ST.truth[ent];
+  $("#pack-help").innerHTML = PACK_HELP;
+  const el = $("#pack"); el.innerHTML = ""; const W = el.clientWidth, H = 470;
+  const root = d3.pack().size([W, H]).padding(d => d.depth === 0 ? 14 : 5)(d3.hierarchy(packData(ST, ent)).sum(d => d.value || 0));
+  const svg = d3.select(el).append("svg").attr("width", W).attr("height", H);
+  const fill = (d) => { const v = d.data.b && d.data.b.value; if (!v || v === "(unknown)") return "#1d1d29"; return v === truth ? "rgba(16,185,129,.20)" : "rgba(255,84,84,.22)"; };
+  const stroke = (d) => { if (d.depth === 1) return color(d.data.name); const v = d.data.b && d.data.b.value; if (!v || v === "(unknown)") return "#33334a"; return v === truth ? "#10b981" : "#FF5454"; };
+  const g = svg.selectAll("g").data(root.descendants().filter(d => d.depth > 0)).join("g").attr("transform", d => `translate(${d.x},${d.y})`).style("cursor", "pointer");
+  g.append("circle").attr("r", d => d.r).attr("fill", fill).attr("stroke", stroke).attr("stroke-width", d => d.depth === 1 ? 2.5 : 1.5)
+    .attr("class", d => CHANGED.has(d.data.name) ? "pulse" : "")
+    .on("click", (e, d) => showWhy(d.data.name, ent)).append("title").text(d => `${d.data.name.split(">").join(" thinks ")} believes ${ent} = ${d.data.b ? d.data.b.value : "?"}`);
+  g.filter(d => d.depth === 1).append("text").attr("y", d => -d.r + 16).attr("text-anchor", "middle").attr("fill", d => color(d.data.name)).attr("font-family", "Space Grotesk").attr("font-weight", 700).attr("font-size", 14).style("pointer-events", "none").text(d => d.data.name);
+  g.filter(d => d.r > 18).append("text").attr("y", d => d.depth === 1 ? -d.r + 31 : 4).attr("text-anchor", "middle").attr("font-size", d => d.depth === 1 ? 11 : Math.min(11, d.r / 3.2)).attr("font-family", "JetBrains Mono").style("pointer-events", "none")
+    .attr("fill", d => { const v = d.data.b && d.data.b.value; return !v || v === "(unknown)" ? "#6b7280" : v === truth ? "#6EE7B7" : "#FF8A8A"; })
+    .text(d => { const last = d.data.name.split(">").slice(-1)[0]; const v = d.data.b && d.data.b.value; return d.depth === 1 ? (v && v !== "(unknown)" ? v : "—") : `${last}: ${v && v !== "(unknown)" ? v : "?"}`; });
+}
+
+async function showWhy(chain, ent) {
+  const r = await api(`/api/support/explain?chain=${encodeURIComponent(chain.split(">").join(","))}&entity=${ent}`);
+  $("#why").innerHTML = `<span class="text-falkor font-semibold">${tagAll(chain.split(">").join(" thinks "))}</span> believes <b>${ent} = ${r.belief ?? "?"}</b> <span class="text-slate-500">(${r.via})</span><br>` + r.steps.map(s => `<span class="text-slate-400">• ${s}</span>`).join("<br>");
+}
+
+async function drawGraph() {
+  const agent = ST ? ST.agents.slice().sort((a, b) => (ST.minds[b] || []).length - (ST.minds[a] || []).length)[0] : "Billing";
+  const d = await api(`/api/support/graph?agent=${agent}`);
+  const el = $("#rawgraph"); el.innerHTML = "";
+  ForceGraph()(el).width(el.clientWidth).height(470).backgroundColor("#0E0E12")
+    .graphData({nodes: d.nodes, links: d.links})
+    .nodeLabel(n => n.kind === "value" ? `${n.entity} = ${n.value}` : `Perspective ${n.id}`)
+    .nodeColor(n => n.kind === "value" ? (n.true ? "#10b981" : "#FF5454") : (n.depth === 1 ? "#C15CFF" : "#7466FF"))
+    .nodeVal(n => n.kind === "value" ? 3 : 5 - Math.min(n.depth, 3))
+    .linkColor(l => l.kind === "INHERITS" ? "rgba(116,102,255,.55)" : "rgba(255,255,255,.18)")
+    .linkDirectionalArrowLength(3).linkDirectionalArrowRelPos(1)
+    .nodeCanvasObjectMode(() => "after").nodeCanvasObject((n, ctx, s) => { if (s < 1.4 && n.kind !== "value" && n.depth > 1) return; ctx.font = `${10 / s}px JetBrains Mono`; ctx.fillStyle = "#cbd5e1"; ctx.fillText(n.kind === "value" ? `${n.entity}=${n.value}` : n.id, n.x + 6 / s, n.y + 3 / s); });
+  $("#pack-help").innerHTML = `The real FalkorDB graph <span class="font-mono text-falkor">${d.key}</span>: <span style="color:#C15CFF">●</span> root perspective, <span style="color:#7466FF">●</span> nested perspectives (INHERITS arrows), <span class="right">●</span>/<span class="wrong">●</span> values (BELIEVES edges, true/false). Showing the richest mind; every agent has its own graph like this.`;
+}
+
+function setView(v) { VIEW = v; ["pack", "graph", "list"].forEach(x => $("#v-" + x).classList.toggle("bg-falkor/30", x === v));
+  $("#pack").classList.toggle("hidden", v !== "pack"); $("#rawgraph").classList.toggle("hidden", v !== "graph"); $("#sup-minds").classList.toggle("hidden", v !== "list");
+  if (v === "pack") drawPack(); if (v === "graph") drawGraph(); if (v === "list") $("#pack-help").innerHTML = "Each agent's own beliefs and the nested perspectives that hold beliefs of their own."; }
 
 function renderMinds(st, el) {
   const truth = st.truth;
-  el.innerHTML = st.agents.map(a => {
-    const persp = st.minds[a] || [];
-    const own = persp.find(p => p.chain === a);
+  el.innerHTML = st.agents.map(a => { const persp = st.minds[a] || []; const own = persp.find(p => p.chain === a);
     const nested = persp.filter(p => p.depth >= 2 && p.beliefs.some(b => b.value !== "(unknown)"));
     const line = (b) => { const ok = b.value === truth[b.entity]; const unk = b.value === "(unknown)";
-      return `<div class="mono text-xs ${unk ? 'text-slate-500' : ok ? 'right' : 'wrong'}">${b.entity} = ${b.value}${unk || ok ? '' : ' ✗'} <span class="text-slate-500">(${b.via})</span></div>`; };
-    return `<div class="rounded-xl border border-slate-800 p-3 fade">
-      <div class="mb-1">${agentTag(a)} <span class="text-xs text-slate-500">believes</span></div>
+      return `<div class="font-mono text-xs ${unk ? 'text-slate-500' : ok ? 'right' : 'wrong'}">${b.entity} = ${b.value}${unk || ok ? '' : ' ✗'} <span class="text-slate-500">(${b.via})</span></div>`; };
+    return `<div class="rounded-xl border border-falkor-line p-3 fade"><div class="mb-1">${tag(a)} <span class="text-xs text-slate-500">believes</span></div>
       ${(own ? own.beliefs : []).map(line).join("") || '<div class="text-xs text-slate-500">nothing yet</div>'}
-      ${nested.map(p => `<div class="bubble pl-2 mt-2"><div class="text-xs text-slate-400">thinks ${p.chain.split(">").slice(1).map(agentTag).join(" thinks ")} believes</div>${p.beliefs.filter(b=>b.value!=="(unknown)").map(line).join("")}</div>`).join("")}
-    </div>`; }).join("");
+      ${nested.map(p => `<div class="bubble pl-2 mt-2"><div class="text-xs text-slate-400">thinks ${p.chain.split(">").slice(1).map(tag).join(" thinks ")} believes</div>${p.beliefs.filter(b => b.value !== "(unknown)").map(line).join("")}</div>`).join("")}</div>`; }).join("");
 }
 
 function renderFB(all, el) {
   const first = all.filter(f => f.chain.length === 1), second = all.filter(f => f.chain.length > 1);
   const fbs = first.concat(second.slice(0, 8));
   const more = second.length > 8 ? `<div class="text-xs text-slate-500">+ ${second.length - 8} more second-order false beliefs (each person's outdated model of someone else)</div>` : '';
-  el.innerHTML = (fbs.length ? `<div class="text-xs text-slate-400 mb-1">${first.length} people are wrong about the world · ${second.length} wrong models of someone else</div>` : '') + (fbs.length ? fbs.map(f => `<div class="fade"><span class="chip ${f.chain.length>1?'bg-violet-900/60 text-violet-200':'bg-rose-900/60 text-rose-200'}">${f.chain.length>1?'2nd-order':'false belief'}</span>
-    ${f.summary.replace(/(Maya|Billing|Shipping|Escalation|Finance|Asha|Ben|Chen|Dara|Eli|Fatima|Gus)/g, (m)=>agentTag(m))}
-    ${f.missed ? `<span class="text-xs text-slate-500">missed: “${f.missed.text}”</span>` : ''}</div>`).join("")
-    : '<div class="right">No false beliefs. Everyone (and everyone\'s model of everyone) matches the world.</div>') + more;
+  el.innerHTML = (all.length ? `<div class="text-xs text-slate-400 mb-1">${first.length} wrong about the world · ${second.length} wrong models of someone else</div>` : '') +
+    (fbs.length ? fbs.map(f => `<div class="fade"><span class="chip ${f.chain.length > 1 ? 'bg-falkor/25 text-indigo-200' : 'bg-red-500/20 text-red-200'}">${f.chain.length > 1 ? '2nd-order' : 'false belief'}</span>
+      ${tagAll(f.summary)} ${f.missed ? `<span class="text-xs text-slate-500">missed: “${f.missed.text}”</span>` : ''}</div>`).join("")
+     : '<div class="right">No false beliefs. Everyone, and everyone\'s model of everyone, matches the world.</div>') + more;
 }
 
-async function loadSupport() {
-  const st = await api("/api/support/state");
-  st.agents.forEach((a, i) => AG[a] = COLORS[i % COLORS.length]);
+async function loadSupport(st) {
+  st = st || await api("/api/support/state"); ST = st;
+  st.agents.forEach((a, i) => AG[a] = AG[a] || PALETTE[i % PALETTE.length]);
   $("#sup-timeline").innerHTML = st.timeline.filter(e => e.kind !== "noise").map(e =>
-    `<div class="fade ${e.kind === 'chatter' ? 'opacity-40 text-xs' : ''}"><span class="text-slate-500 mono text-xs">#${e.seq}</span> ${dots(e.witnesses)} <span>${e.text}</span>
+    `<div class="fade ${e.kind === 'chatter' ? 'opacity-35 text-xs' : ''}"><span class="text-slate-500 font-mono text-xs">#${e.seq}</span> ${dots(e.witnesses)} <span>${e.text}</span>
      ${e.room ? `<span class="text-xs text-slate-500">#${e.room}</span>` : ''}</div>`).join("");
-  $("#sup-stats").textContent = `${st.stats.graphs} graphs · ${st.stats.perspectives} perspectives materialised of ${st.stats.possible_perspectives} possible · ${st.stats.belief_edges} belief edges`;
-  renderMinds(st, $("#sup-minds"));
-  renderFB(st.false_beliefs, $("#sup-fb"));
+  const tl = $("#sup-timeline"); tl.scrollTop = tl.scrollHeight;
+  $("#sup-stats").textContent = `${st.stats.graphs} FalkorDB graphs · ${st.stats.perspectives} perspectives materialised of ${st.stats.possible_perspectives} possible · ${st.stats.belief_edges} belief edges`;
+  const ents = st.entities; const cur = $("#pack-entity").value;
+  $("#pack-entity").innerHTML = ents.map(e => `<option ${e === (cur || "refund_4411") ? "selected" : ""}>${e}</option>`).join("");
+  renderMinds(st, $("#sup-minds")); renderFB(st.false_beliefs, $("#sup-fb"));
   const opts = st.agents.map(a => `<option>${a}</option>`).join("");
   if (!$("#ho-from").innerHTML) { $("#ho-from").innerHTML = opts; $("#ho-to").innerHTML = opts; $("#ho-from").value = "Escalation"; $("#ho-to").value = "Shipping"; }
-  return st;
+  if (VIEW === "pack") drawPack(); if (VIEW === "graph") drawGraph();
 }
 
-async function resetScenario(sid) { await api(`/api/${sid}/reset`, {method: "POST"}); sid === "support" ? (await loadSupport(), $("#ho-out").innerHTML = "", $("#ag-out").innerHTML = "") : loadOrg(); }
+async function resetScenario(sid) { const st = await post(`/api/${sid}/reset`); CHANGED = new Set(); if (sid === "support") { await loadSupport(st); refreshTheater(true); $("#ho-out").innerHTML = ""; $("#ag-out").innerHTML = ""; $("#ev-out").innerHTML = ""; $("#why").innerHTML = ""; } else loadOrg(); }
 
 async function previewHandoff() {
   const d = await api(`/api/support/handoff?sender=${$("#ho-from").value}&receiver=${$("#ho-to").value}`);
   const saved = d.tokens.full_transcript ? Math.round(100 * (1 - d.tokens.delta / d.tokens.full_transcript)) : 0;
-  $("#ho-out").innerHTML = `<div class="flex gap-4 mb-2 text-xs"><div>Full transcript: <b class="mono">${d.tokens.full_transcript}</b> tokens</div>
-    <div>SecondOrder delta: <b class="mono right">${d.tokens.delta}</b> tokens <span class="text-slate-400">(${saved}% less)</span></div></div>` +
-    (d.facts.length ? d.facts.map(f => `<div class="fade mb-1"><span class="chip ${f.second_order ? 'bg-violet-900/60 text-violet-200' : 'bg-sky-900/60 text-sky-200'}">${f.second_order ? 'about ' + f.about : f.entity}</span>
-      ${f.second_order ? f.tell : `${f.entity} = <b>${f.tell}</b>`} <span class="text-xs text-slate-500">(they think: ${f.they_think ?? 'nothing'}; because “${f.why}”)</span></div>`).join("")
-     : '<div class="text-slate-400">Nothing to send: the receiver already knows everything relevant.</div>');
+  $("#ho-out").innerHTML = (d.facts.length ? `<div class="flex gap-3 mb-3 text-xs"><div class="card px-3 py-2"><div class="stat"><span class="n text-slate-300">${d.tokens.full_transcript}</span></div>tokens: full transcript</div>
+    <div class="card px-3 py-2"><div class="stat"><span class="n grad-text">${d.tokens.delta}</span></div>tokens: SecondOrder delta (${saved}% less)</div></div>` : '') +
+    (d.facts.length ? d.facts.map(f => `<div class="fade mb-1"><span class="chip ${f.second_order ? 'bg-falkor/25 text-indigo-200' : 'bg-sky-500/15 text-sky-200'}">${f.second_order ? 'about ' + f.about : f.entity}</span>
+      ${f.second_order ? tagAll(f.tell) : `${f.entity} = <b>${f.tell}</b>`} <span class="text-xs text-slate-500">(they think: ${f.they_think ?? 'nothing'}; because “${f.why}”)</span></div>`).join("")
+     : `<div class="text-slate-400">Nothing to send: ${tag($("#ho-to").value)} already knows everything relevant, as far as ${tag($("#ho-from").value)} knows.</div>`);
 }
-async function commitHandoff() { await api(`/api/support/handoff`, {method: "POST", headers: {"content-type": "application/json"}, body: JSON.stringify({sender: $("#ho-from").value, receiver: $("#ho-to").value})}); await loadSupport(); await previewHandoff(); }
+async function commitHandoff() { const st = await post(`/api/support/handoff`, {sender: $("#ho-from").value, receiver: $("#ho-to").value}); CHANGED = new Set(); await loadSupport(st); await previewHandoff(); refreshTheater(); }
 
 let LAST = null;
 async function runAgents() {
   $("#ag-btn").disabled = true; $("#ag-btn").textContent = "Thinking…";
   try {
-    LAST = await api(`/api/support/agent`, {method: "POST", headers: {"content-type": "application/json"}, body: JSON.stringify({message: $("#ag-msg").value})});
+    LAST = await post(`/api/support/agent`, {message: $("#ag-msg").value});
     $("#ag-out").innerHTML = ["flat", "secondorder"].map(m => { const r = LAST[m]; if (!r) return "";
-      return `<div class="rounded-xl border ${m === 'secondorder' ? 'border-sky-700' : 'border-slate-700'} p-3 fade">
-        <div class="text-xs mb-1 ${m === 'secondorder' ? 'text-sky-300' : 'text-slate-400'}">${m === 'secondorder' ? 'SecondOrder memory (theory of mind)' : 'Flat memory (own facts only)'}${LAST.cached ? ' · cached run' : ''}</div>
+      return `<div class="rounded-xl border ${m === 'secondorder' ? 'border-falkor' : 'border-falkor-line'} p-3 fade" ${m === 'secondorder' ? 'style="box-shadow:0 0 0 1px #7466FF55, 0 10px 30px rgba(116,102,255,.15)"' : ''}>
+        <div class="text-xs mb-1 ${m === 'secondorder' ? 'text-falkor font-semibold' : 'text-slate-400'}">${m === 'secondorder' ? 'SecondOrder memory (theory of mind)' : 'Flat memory (own facts only)'}${LAST.cached ? ' · recorded run' : ''}</div>
         <div class="mb-2">“${r.draft ? r.draft.message : '(no reply)'}”</div>
-        <div class="text-xs text-slate-500">tools: ${r.trace.map(t => t.tool).join(" → ")}</div>
-        ${m === 'secondorder' && r.draft ? `<button onclick="approve()" class="mt-2 px-2 py-1 rounded bg-emerald-700 text-xs">Approve &amp; send (writes to memory)</button>` : ''}
-      </div>`; }).join("");
+        <div class="text-xs text-slate-500 font-mono">tools: ${r.trace.map(t => t.tool).join(" → ")}</div>
+        ${m === 'secondorder' && r.draft ? `<button onclick="approve()" class="mt-2 grad-btn px-3 py-1 rounded-lg text-xs text-white">Approve &amp; send (writes to memory)</button>` : ''}</div>`; }).join("");
     const acl = await api(`/api/support/acl?agent=Shipping&other=Escalation`);
-    $("#acl-out").innerHTML = `🔒 Shipping's ACL user reading Escalation's mind: <span class="wrong">${acl.reading_other}</span>`;
+    $("#acl-out").innerHTML = `🔒 <span class="font-mono">agent_shipping</span> runs <span class="font-mono">GRAPH.RO_QUERY so:support:mind:Escalation</span> → <span class="wrong">${acl.reading_other}</span>`;
   } catch (e) { $("#ag-out").innerHTML = `<div class="wrong">${e}</div>`; }
   $("#ag-btn").disabled = false; $("#ag-btn").textContent = "Run agents";
 }
-async function approve() {
-  await api(`/api/support/approve`, {method: "POST", headers: {"content-type": "application/json"}, body: JSON.stringify({agent: "Shipping", customer: "Maya", draft: LAST.secondorder.draft})});
-  await loadSupport();
+async function approve() { const st = await post(`/api/support/approve`, {agent: "Shipping", customer: "Maya", draft: LAST.secondorder.draft}); CHANGED = new Set(); await loadSupport(st); refreshTheater(); }
+
+function ev(t) { $("#ev-text").value = t; composeEvent(); }
+async function composeEvent() {
+  const t = $("#ev-text").value.trim(); if (!t) return;
+  $("#ev-btn").disabled = true; $("#ev-btn").textContent = "Claude is extracting…";
+  try {
+    const r = await post(`/api/support/event`, {text: t});
+    CHANGED = new Set(r.changed);
+    $("#ev-out").innerHTML = `<div class="mb-1 text-slate-400">Extracted events:</div>` + r.events.map(e => `<div class="font-mono ${e.error ? 'wrong' : 'text-slate-300'}">${e.kind}(${[e.speaker, e.listener, e.about, (e.agents || []).join("+"), e.room, e.entity && `${e.entity}=${e.value}`].filter(Boolean).join(", ")})${e.error ? ' ✗ ' + e.error : ''}</div>`).join("") +
+      `<div class="mt-2 text-falkor">${r.changed.length} perspective(s) changed: <span class="font-mono text-slate-400">${r.changed.slice(0, 12).join(" · ")}${r.changed.length > 12 ? " …" : ""}</span></div>`;
+    setView("pack"); await loadSupport(r); refreshTheater();
+  } catch (e) { $("#ev-out").innerHTML = `<div class="wrong">${e}</div>`; }
+  $("#ev-btn").disabled = false; $("#ev-btn").textContent = "Apply event";
 }
 
-// ---------------- org
+// ---------------------------------------------------------------- org
 async function loadOrg() {
   const st = await api("/api/org/state");
-  st.agents.forEach((a, i) => AG[a] = AG[a] || COLORS[(i + 3) % COLORS.length]);
+  st.agents.forEach((a, i) => AG[a] = AG[a] || PALETTE[(i + 2) % PALETTE.length]);
   const rows = await Promise.all(st.entities.map(e => api(`/api/org/who_knows?entity=${e}`)));
-  $("#org-who").innerHTML = rows.map(r => `<div class="mb-3"><div class="mono text-xs mb-1">${r.entity} = <b>${r.truth}</b></div>
-    ${r.agents.map(a => `<span class="chip mr-1 ${a.up_to_date ? 'bg-emerald-900/50 text-emerald-200' : 'bg-rose-900/50 text-rose-200'}">${a.agent}: ${a.believes ?? '?'}</span>`).join("")}</div>`).join("");
+  $("#org-who").innerHTML = rows.map(r => `<div class="mb-4"><div class="font-mono text-xs mb-1">${r.entity} = <b class="text-white">${r.truth}</b></div>
+    ${r.agents.map(a => `<span class="chip mr-1 mb-1 inline-block ${a.up_to_date ? 'bg-emerald-500/15 text-emerald-200' : 'bg-red-500/20 text-red-200'}">${a.agent}: ${a.believes ?? '?'}</span>`).join("")}</div>`).join("");
   $("#plan-entity").innerHTML = st.entities.map(e => `<option>${e}</option>`).join("");
   renderFB(st.false_beliefs, $("#org-fb"));
 }
 async function runPlan() {
-  $("#org-plan").innerHTML = "simulating on forks…";
+  $("#org-plan").innerHTML = `<span class="text-slate-400">forking every graph with GRAPH.COPY and simulating…</span>`;
   const p = await api(`/api/org/plan?entity=${$("#plan-entity").value}&speaker=Asha`);
-  $("#org-plan").innerHTML = `<div class="mb-2 text-xs text-slate-400">Out of the loop: ${p.stale_agents.join(", ")}</div>` +
-    Object.entries(p.plans).map(([k, v]) => `<div class="mb-2 rounded border ${k === p.recommended ? 'border-emerald-700' : 'border-slate-700'} p-2">
-      <b>${k.replace('_', ' ')}</b> ${k === p.recommended ? '<span class="chip bg-emerald-800">recommended</span>' : ''}
-      <div class="text-xs">messages: <b>${v.messages}</b> · remaining false beliefs (incl. 2nd-order): <b>${v.remaining_false_beliefs}</b></div>
-      <div class="text-xs text-slate-400 mono">${v.steps.join("<br>")}</div></div>`).join("") +
+  $("#org-plan").innerHTML = `<div class="mb-2 text-xs text-slate-400">Out of the loop: ${p.stale_agents.map(tag).join(", ")}</div>` +
+    Object.entries(p.plans).map(([k, v]) => `<div class="mb-2 rounded-xl border ${k === p.recommended ? 'border-falkor' : 'border-falkor-line'} p-3">
+      <b>${k.replace('_', ' ')}</b> ${k === p.recommended ? '<span class="chip grad-btn text-white">recommended</span>' : ''}
+      <div class="text-xs mt-1">messages: <b>${v.messages}</b> · remaining false beliefs, incl. about each other: <b class="${v.remaining_false_beliefs ? 'wrong' : 'right'}">${v.remaining_false_beliefs}</b></div>
+      <div class="text-xs text-slate-400 font-mono mt-1">${v.steps.join("<br>")}</div></div>`).join("") +
     `<div class="text-xs text-slate-500">Private messages fix what people believe, but not what they believe <i>about each other</i>. A shared announcement creates common ground.</div>`;
 }
 
-// ---------------- hitom
+// ---------------------------------------------------------------- hitom
 async function loadHitomList() {
   const xs = await api(`/api/hitom?order=${$("#ht-order").value}&deception=${$("#ht-dec").checked}`);
-  $("#ht-list").innerHTML = xs.map(x => `<div class="p-2 rounded hover:bg-slate-800 cursor-pointer mb-1" onclick="loadHitom(${x.idx})">
-    <span class="mono text-slate-500">#${x.idx}</span> ${x.question}
-    <div>${x.so_ok ? '<span class="chip bg-emerald-900/60">SecondOrder ✓</span>' : '<span class="chip bg-rose-900/60">SecondOrder ✗</span>'}
-    ${x.opus_ok === undefined || x.opus_ok === null ? '' : x.opus_ok ? '<span class="chip bg-emerald-900/60">Opus ✓</span>' : '<span class="chip bg-rose-900/60">Opus ✗</span>'}</div></div>`).join("");
+  $("#ht-list").innerHTML = xs.map(x => `<div class="p-2 rounded-lg hover:bg-white/5 cursor-pointer mb-1" onclick="loadHitom(${x.idx})">
+    <span class="font-mono text-slate-500">#${x.idx}</span> ${x.question}
+    <div class="mt-1">${x.so_ok ? '<span class="chip bg-emerald-500/15">SecondOrder ✓</span>' : '<span class="chip bg-amber-500/20" title="differs from the released label; matches the reference oracle">SecondOrder ≠ label</span>'}
+    ${x.opus_ok === undefined || x.opus_ok === null ? '' : x.opus_ok ? '<span class="chip bg-emerald-500/15">Opus ✓</span>' : '<span class="chip bg-red-500/20">Opus ✗</span>'}</div></div>`).join("");
 }
 async function loadHitom(i) {
-  $("#ht-item").innerHTML = "building minds in FalkorDB…";
+  $("#ht-item").innerHTML = `<span class="text-slate-400">building the minds in FalkorDB…</span>`;
   const d = await api(`/api/hitom/${i}`);
-  d.minds && Object.keys(d.minds).forEach((a, k) => AG[a] = AG[a] || COLORS[k % COLORS.length]);
+  Object.keys(d.minds || {}).forEach((a, k) => AG[a] = AG[a] || PALETTE[k % PALETTE.length]);
   const steps = d.timeline;
-  const evo = `<table class="text-xs mono mt-2"><tr><th class="text-left">perspective</th>${steps.map(s => `<th title="${s.text}" class="text-slate-500">${s.seq}</th>`).join("")}</tr>
-    ${d.evolution.map(r => `<tr><td class="whitespace-nowrap">${r.chain.join(" › ")}</td>${r.values.map((v, k) => `<td title="${steps[k].text}" class="${v === null ? 'cell-unk' : ''}">${v ? v.replace(/_/g, ' ').split(' ').map(w=>w[0]).join('') : '·'}</td>`).join("")}</tr>`).join("")}</table>`;
-  const llm = Object.entries(d.llm).map(([m, r]) => `<div><b>${m}</b> (no graph): <span class="${r.ok ? 'right' : 'wrong'}">${r.pred}</span></div>`).join("");
-  $("#ht-item").innerHTML = `<div class="fade"><div class="text-lg mb-1">${d.question}</div>
-    <div class="mb-3">Gold: <b>${d.answer}</b> · SecondOrder: <b class="${d.ok ? 'right' : 'wrong'}">${d.secondorder}</b>
-    <span class="text-xs text-slate-500">(built ${d.stats.graphs} graphs, ${d.stats.perspectives}/${d.stats.possible_perspectives} perspectives in ${d.build_ms} ms)</span>${llm}</div>
-    <div class="grid md:grid-cols-2 gap-4"><div><div class="text-xs text-slate-400 mb-1">Story</div>${d.story.map((s, k) => `<div class="text-xs"><span class="text-slate-500 mono">${k + 1}</span> ${s}</div>`).join("")}</div>
-    <div><div class="text-xs text-slate-400 mb-1">Why (read from the graph, level by level)</div>${(d.reasoning || []).map((r, k) => `<div class="text-xs mb-1" style="margin-left:${k * 12}px">↳ ${r.text}</div>`).join("")}</div></div>
-    <div class="text-xs text-slate-400 mt-3">Belief of each nested perspective at every step (hover for event; letters = container initials):</div>${evo}</div>`;
+  const hue = (v) => d3.schemeTableau10[Math.abs([...v].reduce((a, c) => a + c.charCodeAt(0), 0)) % 10];
+  const evo = `<table class="text-xs font-mono mt-2"><tr><th class="text-left">perspective</th>${steps.map(s => `<th title="${s.text}" class="text-slate-500">${s.seq}</th>`).join("")}</tr>
+    ${d.evolution.map(r => `<tr><td class="whitespace-nowrap pr-3">${r.chain.join(" › ")}</td>${r.values.map((v, k) => `<td title="${steps[k].text}: ${v}" class="${v === null ? 'text-slate-600' : ''}" style="${v ? `color:${hue(v)}` : ''}">${v ? v.replace(/_/g, ' ').split(' ').map(w => w[0]).join('') : '·'}</td>`).join("")}</tr>`).join("")}</table>`;
+  const llm = Object.entries(d.llm).map(([m, r]) => `<div><b>${m}</b> (no graph): <span class="${r.pred === d.secondorder ? 'right' : 'wrong'}">${r.pred}</span></div>`).join("");
+  $("#ht-item").innerHTML = `<div class="fade"><div class="font-display text-xl mb-1">${d.question}</div>
+    <div class="mb-3">SecondOrder: <b class="grad-text text-lg">${d.secondorder}</b> · released label: <b>${d.answer}</b>
+    <span class="text-xs text-slate-500">(${d.stats.graphs} graphs, ${d.stats.perspectives} perspectives built in ${d.build_ms} ms)</span>${llm}</div>
+    <div class="grid md:grid-cols-2 gap-4"><div><div class="text-xs text-slate-400 mb-1">Story</div>${d.story.map((s, k) => `<div class="text-xs"><span class="text-slate-500 font-mono">${k + 1}</span> ${s}</div>`).join("")}</div>
+    <div><div class="text-xs text-slate-400 mb-1">Why: read from the graph, one level at a time</div>${(d.reasoning || []).map((r, k) => `<div class="text-xs mb-1.5" style="margin-left:${k * 12}px">↳ ${r.text}</div>`).join("")}</div></div>
+    <div class="text-xs text-slate-400 mt-4">Belief of each nested perspective at every step (time travel via <span class="font-mono">resolve_at</span>; hover for the event; letters = container initials):</div>${evo}</div>`;
 }
 
-// ---------------- bench
-let CH = null;
+// ---------------------------------------------------------------- bench
+let CH = null, CH2 = null;
 async function loadBench() {
   const s = await api("/api/eval");
-  if (!s.series) { $("#bench-side").innerHTML = "Run the evaluation first."; return; }
-  const labels = s.orders.map(o => `order ${o}`);
-  const ds = s.series.map((x, i) => ({label: x.name, data: x.acc, backgroundColor: x.color}));
-  if (CH) CH.destroy();
-  CH = new Chart($("#bench-chart"), {type: "bar", data: {labels, datasets: ds},
-    options: {scales: {y: {min: 0, max: 100, ticks: {color: "#94a3b8"}, grid: {color: "#1f2430"}}, x: {ticks: {color: "#94a3b8"}}}, plugins: {legend: {labels: {color: "#cbd5e1"}}}}});
-  $("#bench-side").innerHTML = s.side_html || "";
-  $("#bench-table").innerHTML = s.table_html || "";
+  if (s.series) {
+    if (CH) CH.destroy();
+    CH = new Chart($("#bench-chart"), {type: "bar", data: {labels: s.orders.map(o => `order ${o}`), datasets: s.series.map((x, i) => ({label: x.name, data: x.acc, backgroundColor: ["#7466FF", "#C15CFF", "#FF5454", "#FF804D", "#4b5563", "#6b7280"][i] || x.color, borderRadius: 4}))},
+      options: {scales: {y: {min: 0, max: 100, ticks: {color: "#9CA3AF"}, grid: {color: "#26263A"}}, x: {ticks: {color: "#9CA3AF"}, grid: {display: false}}}, plugins: {legend: {labels: {color: "#cbd5e1", font: {family: "Inter"}}}}}});
+    $("#bench-side").innerHTML = s.side_html || ""; $("#bench-table").innerHTML = s.table_html || "";
+  }
+  const sc = await api("/api/scale");
+  if (sc.multitenant) {
+    const rows = sc.multitenant.rows;
+    if (CH2) CH2.destroy();
+    CH2 = new Chart($("#scale-chart"), {type: "line", data: {labels: rows.map(r => r.graphs.toLocaleString()), datasets: [
+      {label: "event p50 (ms)", data: rows.map(r => r.event_p50_ms), borderColor: "#7466FF", backgroundColor: "#7466FF", tension: .3},
+      {label: "event p99 (ms)", data: rows.map(r => r.event_p99_ms), borderColor: "#FF5454", backgroundColor: "#FF5454", tension: .3},
+      {label: "nested read p50 (ms)", data: rows.map(r => r.read_p50_ms), borderColor: "#10b981", backgroundColor: "#10b981", tension: .3}]},
+      options: {scales: {y: {min: 0, ticks: {color: "#9CA3AF"}, grid: {color: "#26263A"}, title: {display: true, text: "ms", color: "#9CA3AF"}}, x: {ticks: {color: "#9CA3AF"}, title: {display: true, text: "graphs in one FalkorDB instance", color: "#9CA3AF"}}}, plugins: {legend: {labels: {color: "#cbd5e1"}}}}});
+    const ad = sc.agents_depth;
+    $("#scale-table").innerHTML = `<table class="text-xs font-mono w-full"><tr class="text-slate-400"><th>agents</th><th>depth</th><th>perspectives</th><th>event ms (index)</th><th>event ms (no index)</th><th>read ms</th></tr>` +
+      ad.filter(r => r.index).map(r => { const n = ad.find(x => !x.index && x.agents === r.agents && x.depth === r.depth);
+        return `<tr class="text-center"><td>${r.agents}</td><td>${r.depth}</td><td>${r.perspectives.toLocaleString()}</td><td class="text-falkor">${r.event_ms_median}</td><td>${n ? n.event_ms_median : "–"}</td><td>${r.read_ms_median}</td></tr>`; }).join("") + `</table>
+      <p class="text-xs text-slate-500 mt-2">Memory: ~490 KB baseline per graph with FalkorDB defaults (tunable at load time), ~120 KB per range index, ~2 KB per perspective with a belief. Measured on embedded FalkorDB (falkordblite 0.10 / FalkorDB 4.18) on a laptop.</p>`;
+  }
 }
 
-loadSupport();
+
+// ---------------------------------------------------------------- Mind Theater
+let TH = null, THI = 0, THPLAY = true, THTIMER = null;
+const shortV = (v) => v == null ? "?" : String(v).length > 12 ? String(v).slice(0, 11) + "…" : v;
+async function loadTheater() {
+  const ent = $("#th-entity").value || "refund_4411";
+  TH = await api(`/api/support/replay?entity=${encodeURIComponent(ent)}`);
+  if (!$("#th-entity").innerHTML) $("#th-entity").innerHTML = TH.entities.map(e => `<option ${e === ent ? "selected" : ""}>${e}</option>`).join("");
+  $("#th-ent-label").textContent = ent;
+  TH.agents.forEach((a, i) => AG[a] = AG[a] || PALETTE[i % PALETTE.length]);
+  $("#th-scrub").max = TH.frames.length - 1;
+  buildStage(); THI = 0; thGo(0, true); if (THPLAY) thSchedule();
+}
+function buildStage() {
+  const el = $("#theater"); el.innerHTML = ""; const W = el.clientWidth, H = 500;
+  const rooms = TH.rooms, zoneW = (W - 60 - (rooms.length - 1) * 24) / rooms.length;
+  TH.zones = {};
+  rooms.forEach((r, i) => TH.zones[r] = {x: 30 + i * (zoneW + 24), y: 18, w: zoneW, h: 300});
+  TH.zones.__away = {x: 30, y: 340, w: W - 60, h: 145};
+  const svg = d3.select(el).append("svg").attr("width", W).attr("height", H);
+  const defs = svg.append("defs");
+  TH.agents.forEach(a => { const g = defs.append("radialGradient").attr("id", "orbgrad-" + a); g.append("stop").attr("offset", "0%").attr("stop-color", "#fff").attr("stop-opacity", .9);
+    g.append("stop").attr("offset", "35%").attr("stop-color", color(a)); g.append("stop").attr("offset", "100%").attr("stop-color", "#0E0E12"); });
+  const glow = defs.append("filter").attr("id", "glow"); glow.append("feGaussianBlur").attr("stdDeviation", 4).attr("result", "b");
+  const m = glow.append("feMerge"); m.append("feMergeNode").attr("in", "b"); m.append("feMergeNode").attr("in", "SourceGraphic");
+  const z = svg.append("g");
+  Object.entries(TH.zones).forEach(([r, b]) => { z.append("rect").attr("x", b.x).attr("y", b.y).attr("width", b.w).attr("height", b.h).attr("rx", 18)
+      .attr("fill", r === "__away" ? "rgba(255,255,255,.015)" : "rgba(116,102,255,.05)").attr("stroke", r === "__away" ? "#26263A" : "#7466FF55").attr("stroke-dasharray", r === "__away" ? "4 6" : null).attr("id", "zone-" + r);
+    z.append("text").attr("x", b.x + 16).attr("y", b.y + 24).attr("fill", r === "__away" ? "#6b7280" : "#a5a0ff").attr("font-family", "JetBrains Mono").attr("font-size", 12).text(r === "__away" ? "not in any channel (can't see anything)" : "#" + r); });
+  TH.fx = svg.append("g");
+  TH.orbs = svg.append("g");
+  TH.agents.forEach(a => {
+    const g = TH.orbs.append("g").attr("class", "orb").attr("id", "orb-" + a).attr("transform", `translate(${W / 2},${H / 2})`);
+    g.append("circle").attr("r", 34).attr("fill", "none").attr("class", "halo").attr("stroke-width", 3).attr("filter", "url(#glow)");
+    g.append("circle").attr("r", 22).attr("fill", `url(#orbgrad-${a})`);
+    const moons = g.append("g").attr("class", "moons").style("animation", `spin ${18 + Math.random() * 8}s linear infinite`);
+    TH.agents.filter(b => b !== a).forEach((b, k, arr) => { const ang = 2 * Math.PI * k / arr.length;
+      const mg = moons.append("g").attr("transform", `translate(${46 * Math.cos(ang)},${46 * Math.sin(ang)})`).attr("data-of", b);
+      mg.append("circle").attr("r", 8).attr("fill", "#1d1d29").attr("stroke-width", 1.5);
+      mg.append("text").attr("text-anchor", "middle").attr("dy", 3.5).attr("font-size", 9).attr("font-weight", 700).attr("fill", color(b)).text(b[0]);
+      mg.append("title"); });
+    g.append("text").attr("y", 72).attr("text-anchor", "middle").attr("font-family", "Space Grotesk").attr("font-weight", 700).attr("font-size", 13).attr("fill", color(a)).text(a);
+    g.append("text").attr("class", "belief").attr("y", -58).attr("text-anchor", "middle").attr("font-family", "JetBrains Mono").attr("font-size", 11);
+  });
+}
+function slotFor(f) {
+  const pos = {}, groups = {};
+  TH.agents.forEach(a => { const r = f.where[a] && TH.zones[f.where[a]] ? f.where[a] : "__away"; (groups[r] = groups[r] || []).push(a); });
+  Object.entries(groups).forEach(([r, as]) => { const b = TH.zones[r];
+    as.forEach((a, i) => { const cols = r === "__away" ? as.length : Math.min(as.length, 3); const row = Math.floor(i / cols), col = i % cols;
+      const cw = b.w / cols; pos[a] = [b.x + cw * (col + .5), r === "__away" ? b.y + 70 : b.y + 105 + row * 120]; }); });
+  return pos;
+}
+const tone = (v, truth) => v == null || v === "(unknown)" ? "#3a3a52" : v === truth ? "#10b981" : "#FF5454";
+function thGo(i, instant) {
+  if (!TH) return; THI = Math.max(0, Math.min(TH.frames.length - 1, i)); $("#th-scrub").value = THI;
+  const f = TH.frames[THI], pos = slotFor(f), truth = f.truth, dur = instant ? 0 : 650;
+  $("#th-caption").innerHTML = `<span class="text-falkor">#${f.seq}</span> ${tagAll(f.text)} <span class="text-slate-500">· world: ${TH.entity} = <b class="text-white">${truth ?? "–"}</b></span>`;
+  TH.agents.forEach(a => {
+    const g = d3.select("#orb-" + a), m = f.minds[a];
+    g.transition().duration(dur).ease(d3.easeCubicInOut).attr("transform", `translate(${pos[a][0]},${pos[a][1]})`);
+    g.select(".halo").transition().duration(dur).attr("stroke", tone(m.own, truth)).attr("stroke-opacity", m.own == null ? .25 : 1);
+    g.select(".belief").text(m.own == null ? "" : shortV(m.own)).attr("fill", tone(m.own, truth) === "#3a3a52" ? "#6b7280" : tone(m.own, truth));
+    g.selectAll(".moons > g").each(function () { const b = this.getAttribute("data-of"), v = m.of[b];
+      d3.select(this).select("circle").transition().duration(dur).attr("stroke", tone(v, truth)).attr("fill", v == null ? "#16161D" : tone(v, truth) + "33");
+      d3.select(this).select("title").text(`${a} thinks ${b} believes ${TH.entity} = ${v ?? "?"}`); });
+    g.attr("opacity", f.witnesses.includes(a) || ["chatter"].includes(f.kind) ? 1 : (f.where[a] ? .85 : .45));
+  });
+  if (!instant && f.kind !== "chatter") setTimeout(() => beams(f, pos), dur * .6);
+}
+function beams(f, pos) {
+  const src = f.actor && pos[f.actor.split(",")[0]] ? pos[f.actor.split(",")[0]] : null;
+  const ws = f.witnesses.filter(w => pos[w]);
+  const private_ = f.kind === "tell";
+  const c = f.entity_changed ? "#FF804D" : private_ ? "#C15CFF" : "#7466FF";
+  if (src) {
+    TH.fx.append("circle").attr("cx", src[0]).attr("cy", src[1]).attr("r", 10).attr("fill", "none").attr("stroke", c).attr("stroke-width", 3)
+      .transition().duration(1100).attr("r", 120).attr("stroke-opacity", 0).remove();
+    ws.filter(w => !f.actor.split(",").includes(w)).forEach(w => {
+      const l = TH.fx.append("line").attr("x1", src[0]).attr("y1", src[1]).attr("x2", src[0]).attr("y2", src[1]).attr("stroke", c).attr("stroke-width", private_ ? 2 : 2.5)
+        .attr("stroke-dasharray", private_ ? "3 5" : null).attr("filter", "url(#glow)").attr("stroke-linecap", "round");
+      l.transition().duration(450).attr("x2", pos[w][0]).attr("y2", pos[w][1]).transition().delay(500).duration(500).attr("stroke-opacity", 0).remove();
+      const flash = TH.fx.append("circle").attr("cx", pos[w][0]).attr("cy", pos[w][1]).attr("r", 24).attr("fill", c).attr("fill-opacity", 0);
+      flash.transition().delay(420).duration(200).attr("fill-opacity", .35).transition().duration(600).attr("fill-opacity", 0).attr("r", 40).remove();
+    });
+  }
+}
+async function refreshTheater(fromStart) {
+  const keep = THI; await loadTheater(); const last = TH.frames.length - 1;
+  if (fromStart) return; THPLAY = false; $("#th-play").textContent = "Play"; clearTimeout(THTIMER);
+  thGo(Math.max(0, last - 3), true); let k = Math.max(0, last - 3);
+  const tick = () => { if (k < last) { k++; thGo(k); setTimeout(tick, 1300); } }; setTimeout(tick, 600);
+  document.getElementById("theater-card").scrollIntoView({behavior: "smooth", block: "center"});
+}
+function thSchedule() { clearTimeout(THTIMER); if (!THPLAY || !TH) return;
+  const f = TH.frames[THI]; const wait = f.kind === "chatter" ? 280 : f.entity_changed ? 2300 : 1500;
+  THTIMER = setTimeout(() => { if (THI >= TH.frames.length - 1) { THTIMER = setTimeout(() => { thGo(0, true); thSchedule(); }, 3500); return; } thGo(THI + 1); thSchedule(); }, wait); }
+function thToggle() { THPLAY = !THPLAY; $("#th-play").textContent = THPLAY ? "Pause" : "Play"; if (THPLAY) thSchedule(); else clearTimeout(THTIMER); }
+function thStep(d) { THPLAY = false; $("#th-play").textContent = "Play"; clearTimeout(THTIMER); thGo(THI + d); }
+
+(function net() {
+  const c = document.getElementById("net"), x = c.getContext("2d"); let W, H, P = [];
+  const resize = () => { W = c.width = innerWidth * devicePixelRatio; H = c.height = innerHeight * devicePixelRatio; };
+  resize(); addEventListener("resize", resize);
+  const cols = ["#7466FF", "#C15CFF", "#FF5454", "#7466FF"];
+  for (let i = 0; i < 70; i++) P.push({x: Math.random() * W, y: Math.random() * H, vx: (Math.random() - .5) * .25, vy: (Math.random() - .5) * .25, r: 1 + Math.random() * 2, c: cols[i % 4], ph: Math.random() * 6.28});
+  let t = 0; (function frame() { t += .01; x.clearRect(0, 0, W, H);
+    for (const p of P) { p.x += p.vx; p.y += p.vy; if (p.x < 0 || p.x > W) p.vx *= -1; if (p.y < 0 || p.y > H) p.vy *= -1; }
+    for (let i = 0; i < P.length; i++) for (let j = i + 1; j < P.length; j++) { const a = P[i], b = P[j], d = Math.hypot(a.x - b.x, a.y - b.y);
+      if (d < 170 * devicePixelRatio) { x.strokeStyle = `rgba(116,102,255,${.16 * (1 - d / (170 * devicePixelRatio))})`; x.lineWidth = 1; x.beginPath(); x.moveTo(a.x, a.y); x.lineTo(b.x, b.y); x.stroke(); } }
+    for (const p of P) { x.fillStyle = p.c; x.globalAlpha = .5 + .5 * Math.sin(t * 2 + p.ph); x.beginPath(); x.arc(p.x, p.y, p.r * devicePixelRatio, 0, 6.28); x.fill(); x.globalAlpha = 1; }
+    requestAnimationFrame(frame); })();
+})();
+function countUp() { document.querySelectorAll("#hero-stats .n").forEach(el => { const m = el.textContent.match(/^([\d.]+)(.*)$/); if (!m || el.textContent.includes("→")) return;
+  const target = parseFloat(m[1]), dec = (m[1].split(".")[1] || "").length, suf = m[2]; let k = 0; const N = 40;
+  const it = setInterval(() => { k++; el.textContent = (target * k / N).toFixed(dec) + suf; if (k >= N) { el.textContent = m[1] + suf; clearInterval(it); } }, 22); }); }
+heroStats().then(countUp); loadSupport(); loadTheater();
 </script>
 </body>
 </html>

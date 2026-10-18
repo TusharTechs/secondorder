@@ -197,6 +197,147 @@ def approve(sid: str, req: ApproveReq):
     return _snapshot(sid)
 
 
+# ----------------------------------------------------------------------------- raw graph + live events
+@app.get("/api/{sid}/graph")
+def mind_graph(sid: str, agent: str):
+    """The actual FalkorDB graph of one mind: Perspective nodes, INHERITS and active BELIEVES edges."""
+    sc = _ensure(sid)
+    if agent not in sc.agents:
+        raise HTTPException(404, "unknown agent")
+    g = sc.mind(agent)
+    persp = g.query("MATCH (p:Perspective) RETURN p.chain, p.depth").result_set
+    inh = g.query("MATCH (c:Perspective)-[:INHERITS]->(p:Perspective) RETURN c.chain, p.chain").result_set
+    bel = g.query("MATCH (p:Perspective)-[b:BELIEVES {active: true}]->(v:Value) RETURN p.chain, b.entity, v.name, b.via").result_set
+    nodes = [{"id": c, "kind": "perspective", "depth": d} for c, d in persp]
+    vals = sorted({(e, v) for _, e, v, _ in bel})
+    nodes += [{"id": f"{e}={v}", "kind": "value", "entity": e, "value": v, "true": sc.truth(e) == v} for e, v in vals]
+    links = [{"source": c, "target": p, "kind": "INHERITS"} for c, p in inh]
+    links += [{"source": c, "target": f"{e}={v}", "kind": "BELIEVES", "via": via} for c, e, v, via in bel]
+    return {"agent": agent, "key": f"so:{sid}:mind:{agent}", "nodes": nodes, "links": links}
+
+
+def _belief_map(sc):
+    out = {}
+    for a in sc.agents:
+        for p in sc.perspectives(a):
+            for b in p["beliefs"]:
+                out[(p["chain"], b["entity"])] = (b["value"], b["t"])
+    return out
+
+
+class EventReq(BaseModel):
+    text: str = Field(..., max_length=500)
+
+
+COMPOSER_SYSTEM = """Convert the user's description of what happens next in a multi-agent scenario into memory events.
+Known people: {agents}. Known rooms/channels: {rooms}. Known facts (entity = current value): {facts}.
+Event kinds:
+- join: people (agents) enter a room.  - leave: one person (speaker) leaves their room.
+- set: the world changes (entity = value) and everyone in the room sees it (speaker = who did it, may be empty).
+- say: speaker says entity = value in a room; everyone present now knows, and knows the others know.
+- tell: speaker privately tells listener entity = value.
+- report: speaker tells the room that `about` believes entity = value.
+Reuse existing entity names when the user refers to them (e.g. "the refund" -> refund_4411). Only output events."""
+
+COMPOSER_SCHEMA = {"type": "json_schema", "schema": {"type": "object", "properties": {"events": {"type": "array", "items": {
+    "type": "object", "properties": {
+        "kind": {"type": "string", "enum": ["join", "leave", "set", "say", "tell", "report"]},
+        "agents": {"type": "array", "items": {"type": "string"}}, "speaker": {"type": "string"},
+        "listener": {"type": "string"}, "about": {"type": "string"}, "room": {"type": "string"},
+        "entity": {"type": "string"}, "value": {"type": "string"}},
+    "required": ["kind", "agents", "speaker", "listener", "about", "room", "entity", "value"],
+    "additionalProperties": False}}}, "required": ["events"], "additionalProperties": False}}
+
+
+@app.post("/api/{sid}/event")
+def compose_event(sid: str, req: EventReq):
+    """Live event composer: plain English -> Claude extracts perception events -> graphs update."""
+    import asyncio
+
+    from secondorder import llm
+
+    sc = _ensure(sid)
+    if not LLM_ENABLED:
+        raise HTTPException(503, "Set ANTHROPIC_API_KEY to use the live composer")
+    rooms = sorted({e["room"] for e in sc.timeline() if e.get("room")})
+    facts = {e: sc.truth(e) for e in sc.entities()}
+    text, _ = asyncio.run(llm.ask(llm.OPUS, req.text, effort="low", fmt=COMPOSER_SCHEMA, system=COMPOSER_SYSTEM.format(
+        agents=", ".join(sc.agents), rooms=", ".join(rooms), facts=json.dumps(facts))))
+    events = json.loads(text)["events"] if text else []
+    before = _belief_map(sc)
+    applied = []
+    for e in events:
+        k, room = e["kind"], e["room"] or None
+        try:
+            if k == "join":
+                sc.enter([a for a in e["agents"] if a] or [e["speaker"]], room or "room")
+            elif k == "leave":
+                sc.exit(e["speaker"] or (e["agents"] or [None])[0])
+            elif k == "set":
+                if e["speaker"]:
+                    sc.say(e["speaker"], room, e["entity"], e["value"], changes_world=True, text=req.text)
+                else:
+                    sc.observe(e["entity"], e["value"], room=room, located=False, text=req.text)
+            elif k == "say":
+                sc.say(e["speaker"], room, e["entity"], e["value"], text=f"{e['speaker']}: {req.text}")
+            elif k == "tell":
+                sc.tell(e["speaker"], e["listener"], e["entity"], e["value"], text=req.text)
+            elif k == "report":
+                sc.report(e["speaker"], room, e["about"], e["entity"], e["value"], text=req.text)
+            applied.append(e)
+        except Exception as ex:  # keep going; report what failed
+            applied.append({**e, "error": str(ex)[:200]})
+        sc = Scenario.load(sid)
+    after = _belief_map(sc)
+    changed = sorted({c for (c, ent), v in after.items() if before.get((c, ent)) != v})
+    return {"events": applied, "changed": changed, **_snapshot(sid)}
+
+
+@app.get("/api/{sid}/replay")
+def replay(sid: str, entity: str = ""):
+    """Everything the Mind Theater needs: per step, who is where, who witnessed it, and every agent's belief
+    and second-order beliefs about `entity` at that step (time travel via resolve_at)."""
+    sc = _ensure(sid)
+    entity = entity or (sc.entities() or [""])[0]
+    truth_now = sc.truth(entity)
+    where = {a: None for a in sc.agents}
+    frames = []
+    for ev in sc.timeline():
+        if ev["kind"] == "enter" and ev["actor"]:
+            for a in ev["actor"].split(","):
+                where[a] = ev["room"]
+        elif ev["kind"] == "exit" and ev["actor"]:
+            where[ev["actor"]] = None
+        if ev["kind"] in ("noise",):
+            continue
+        t = ev["seq"]
+        minds = {}
+        for a in sc.agents:
+            own = sc.resolve([a], entity, at=t).value
+            minds[a] = {"own": own, "of": {b: sc.resolve([a, b], entity, at=t).value for b in sc.agents if b != a}}
+        frames.append({"seq": t, "kind": ev["kind"], "text": ev["text"], "room": ev["room"], "actor": ev["actor"],
+                       "witnesses": ev["witnesses"], "where": dict(where), "entity_changed": ev["entity"] == entity,
+                       "truth": sc.resolve([], entity).value if False else None, "minds": minds})
+    # world truth over time: last state-changing value about entity up to each step
+    truth, cur = [], None
+    for ev in sc.timeline():
+        if ev["entity"] == entity and ev["kind"] in ("observe", "move") and ev["value"] is not None:
+            cur = ev["value"]
+        truth.append((ev["seq"], cur))
+    tmap = dict(truth)
+    for f in frames:
+        f["truth"] = tmap.get(f["seq"])
+    rooms = sorted({f["room"] for f in frames if f["room"]})
+    return {"sid": sid, "entity": entity, "entities": sc.entities(), "agents": sc.agents, "rooms": rooms,
+            "truth_now": truth_now, "frames": frames}
+
+
+@app.get("/api/scale")
+def scale():
+    p = os.path.join(RESULTS, "scale.json")
+    return json.load(open(p)) if os.path.exists(p) else {}
+
+
 # ----------------------------------------------------------------------------- Hi-ToM explorer
 @lru_cache(maxsize=1)
 def _hitom():

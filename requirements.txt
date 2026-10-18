@@ -1,5 +1,5 @@
 falkordb>=1.8
-falkordblite>=0.10
+falkordblite>=0.10; sys_platform != "win32"   # embedded FalkorDB (macOS, Linux). On Windows run FalkorDB in Docker.
 anthropic>=1.15
 fastapi>=0.144
 uvicorn[standard]>=0.30

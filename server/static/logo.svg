@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <defs>
+    <linearGradient id="ring" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#C15CFF"/><stop offset="1" stop-color="#FF5454"/>
+    </linearGradient>
+    <radialGradient id="core" cx="0.42" cy="0.4" r="0.7">
+      <stop offset="0" stop-color="#FFFFFF"/><stop offset="0.35" stop-color="#9C92FF"/><stop offset="1" stop-color="#7466FF"/>
+    </radialGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="2.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <!-- outer mind -->
+  <circle cx="64" cy="64" r="54" fill="none" stroke="url(#ring)" stroke-width="9" filter="url(#glow)"/>
+  <!-- the mind it models (offset: a different point of view) -->
+  <circle cx="54" cy="70" r="27" fill="none" stroke="#7466FF" stroke-width="7"/>
+  <!-- the belief inside the modelled mind -->
+  <circle cx="48" cy="75" r="10" fill="url(#core)"/>
+  <!-- a moon: one mind's model of another, orbiting the outer mind -->
+  <circle cx="102" cy="31" r="8" fill="#0E0E12" stroke="#FF5454" stroke-width="4"/>
+</svg>

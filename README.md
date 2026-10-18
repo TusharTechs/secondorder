@@ -1,6 +1,42 @@
-# SecondOrder: theory-of-mind memory for AI agents, on FalkorDB
+<p align="center">
+  <img src="docs/brand/wordmark.png" alt="SecondOrder" width="620" />
+</p>
 
-[![ci](https://github.com/TusharTechs/secondorder/actions/workflows/ci.yml/badge.svg)](https://github.com/TusharTechs/secondorder/actions/workflows/ci.yml)
+<p align="center">
+  <a href="https://github.com/TusharTechs/secondorder/actions/workflows/ci.yml"><img src="https://github.com/TusharTechs/secondorder/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
+  <img src="https://img.shields.io/badge/FalkorDB-graph%20per%20mind-7466FF" alt="FalkorDB" />
+  <img src="https://img.shields.io/badge/Hi--ToM-100%25%20vs%20reference-C15CFF" alt="Hi-ToM" />
+  <img src="https://img.shields.io/badge/MCP-server-FF5454" alt="MCP" />
+  <img src="https://img.shields.io/badge/python-3.12%2B-3776AB" alt="Python" />
+  <img src="https://img.shields.io/badge/license-MIT-green" alt="License" />
+</p>
+
+<p align="center"><b>Graph Hacks 2026 (WeMakeDevs × FalkorDB)</b> · Track 02: Agent Memory &amp; Coordination (primary) · Track 03: Company Brain</p>
+
+## Links
+
+| What | Link |
+|---|---|
+| 🌐 Live demo | **TODO: Render URL** · deploy your own: [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/TusharTechs/secondorder) |
+| 🎬 Demo video (3:39, captioned) | [`docs/video/demo.mp4`](docs/video/demo.mp4) |
+| 💻 Source code | https://github.com/TusharTechs/secondorder |
+| 🧾 Every Cypher query the product runs | [`docs/CYPHER.md`](docs/CYPHER.md) |
+| 📊 Benchmark results table | [`eval/results/RESULTS.md`](eval/results/RESULTS.md) |
+| 🔎 Hi-ToM label inconsistencies we found (147) | [`eval/results/LABEL_ERRORS.md`](eval/results/LABEL_ERRORS.md) |
+| 🐛 Report to the Hi-ToM authors | [ying-hui-he/Hi-ToM_dataset#4](https://github.com/ying-hui-he/Hi-ToM_dataset/issues/4) |
+| 🧪 Hi-ToM benchmark (dataset + generator) | https://github.com/ying-hui-he/Hi-ToM_dataset · [paper (EMNLP 2023)](https://arxiv.org/abs/2310.16755) |
+| 🗄️ FalkorDB | https://www.falkordb.com · [docs](https://docs.falkordb.com) · [GitHub](https://github.com/FalkorDB/FalkorDB) |
+| 🪶 falkordblite (embedded FalkorDB used for zero-setup runs) | https://pypi.org/project/falkordblite/ |
+| 🧩 Model Context Protocol | https://modelcontextprotocol.io |
+| 🤖 Claude API (event extraction, live agents, baselines) | https://docs.claude.com |
+| 🏆 Hackathon | https://www.wemakedevs.org/hackathons/falkordb |
+
+## Contents
+[Why](#why) · [Headline results](#headline-results) · [What it does](#what-it-does) · [Architecture](#architecture) · [Getting started](#getting-started-windows-macos-linux)
+· [Use it in your agents](#use-it-in-your-agents) · [HTTP API](#http-api) · [Results in detail](#results-in-detail) · [Project structure](#project-structure)
+· [Configuration](#configuration) · [Troubleshooting](#troubleshooting) · [Prior art](#prior-art-and-whats-new) · [Limits](#honest-limits)
+
+## Why
 
 > Agent memory stores what is true, or what *I* know. **SecondOrder also stores what *you* know, and what you think *I* know.**
 
@@ -14,13 +50,6 @@ perspectives for what it thinks others believe (up to depth 4). Events update on
 knows who is out of date, who has a wrong model of whom, and the smallest message that fixes it. Each agent connects as its own FalkorDB ACL
 user and can read **only its own mind**: theory of mind, not omniscience.
 
-**Tracks:** **Track 02: Agent Memory and Coordination** (primary) · **Track 03: Company Brain**
-
-| | |
-|---|---|
-| Live demo | **TODO: deployment URL** · or deploy your own: [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/TusharTechs/secondorder) |
-| Demo video | [`docs/video/demo.mp4`](docs/video/demo.mp4) (captioned walkthrough) |
-| Run locally (no Docker, no API key) | `pip install -r requirements.txt && uvicorn server.app:app` |
 
 ![SecondOrder](docs/img/hero.png)
 
@@ -81,6 +110,228 @@ moons are what it thinks each other agent believes (green = true, red = false). 
 ![Benchmarks](docs/img/bench.png)
 
 ---
+
+## Architecture
+
+```mermaid
+flowchart LR
+  subgraph Clients
+    UI[Web app<br/>Mind Theater · D3 · Chart.js]
+    MCPC[Any MCP client<br/>Claude Code / Desktop / Cursor]
+    PY[Python code<br/>from secondorder import Memory]
+  end
+  subgraph SecondOrder
+    API[FastAPI server<br/>server/app.py]
+    MCP[MCP server<br/>mcp_server.py]
+    MEM[Memory API<br/>secondorder/memory.py]
+    TOOLS[ToM tools<br/>false_beliefs · handoff_delta · who_knows<br/>common_ground · explain · plan_announcements]
+    ENG[Engine<br/>perception routing · copy-on-write<br/>resolve · time travel]
+    VIEW[AgentView<br/>ACL-scoped, read-only]
+    LLM[Claude<br/>event extraction · live agents · ask]
+  end
+  subgraph FalkorDB["FalkorDB (one instance)"]
+    W[(so:sid:world<br/>events · witnesses · truth)]
+    M1[(so:sid:mind:Maya)]
+    M2[(so:sid:mind:Shipping)]
+    M3[(so:sid:mind:…)]
+  end
+  UI --> API
+  MCPC --> MCP
+  PY --> MEM
+  API --> TOOLS
+  MCP --> TOOLS
+  MEM --> TOOLS
+  API --> LLM
+  TOOLS --> ENG
+  ENG -->|GRAPH.QUERY| W
+  ENG -->|GRAPH.QUERY| M1
+  ENG -->|GRAPH.QUERY| M2
+  ENG -->|GRAPH.COPY forks| M3
+  API --> VIEW
+  MCP -->|SO_AGENT mode| VIEW
+  VIEW -->|ACL user agent_x:<br/>GRAPH.RO_QUERY on own mind only| M2
+```
+
+**What happens when something occurs** (e.g. *"Finance rejects the refund in #ops-internal"*):
+
+```mermaid
+sequenceDiagram
+  participant C as Caller (UI / MCP / Memory)
+  participant E as SecondOrder engine
+  participant W as FalkorDB: world graph
+  participant M as FalkorDB: mind graphs
+  C->>E: say(Finance, ops-internal, refund_4411, rejected)
+  E->>W: who is IN #ops-internal right now?
+  W-->>E: Billing, Finance, Escalation (Maya, Shipping are not)
+  E->>W: CREATE Event + WITNESSED edges, set truth
+  loop each witness's mind graph
+    E->>M: copy-on-write: freeze old belief in children that did NOT witness (e.g. Finance>Maya)
+    E->>M: update every perspective made only of witnesses (Finance, Finance>Billing, …)
+  end
+  Note over M: Maya's mind untouched → she still believes "approved".<br/>Everyone present knows Maya believes "approved".
+  C->>E: false_beliefs() / handoff_delta(Escalation, Shipping)
+  E->>M: one Cypher walk up INHERITS per perspective
+  E-->>C: who is wrong, what they missed, the minimal message
+```
+
+### Graph data model
+
+```
+one FalkorDB instance, many graphs
+├── so:<sid>:world                       ground truth + perception
+│     (:Agent)-[:IN {since, chapter}]->(:Room)          (:Agent)-[:EXITED {t, chapter}]->(:Room)
+│     (:Agent)-[:WITNESSED]->(:Event {seq, kind, text, room, actor})-[:ABOUT]->(:Entity)
+│     (:Agent)-[:PERFORMED]->(:Event)     (:Entity)-[:IS {t}]->(:Value)-[:LOCATED_IN]->(:Room)
+│     (:Agent)-[:TOLD {t, entity, value, public, trusted}]->(:Agent)
+├── so:<sid>:mind:Maya                   everything Maya believes
+├── so:<sid>:mind:Shipping               (FalkorDB ACL user agent_shipping: GRAPH.RO_QUERY on ~so:*:mind:Shipping only)
+│     (:Perspective {chain:'Shipping'})                 what Shipping believes
+│     (:Perspective {chain:'Shipping>Maya'})            what Shipping thinks Maya believes
+│     (:Perspective {chain:'Shipping>Maya>Billing'})    ... up to depth 4
+│     (child:Perspective)-[:INHERITS]->(parent:Perspective)
+│     (:Perspective)-[:BELIEVES {entity, active, t, until, via, src, event}]->(:Value)
+│     range index on :Perspective(chain)
+└── ...
+```
+
+
+
+**Key ideas**
+- **One graph per agent is the security boundary.** FalkorDB hosts thousands of isolated graphs in one instance, and an ACL user per agent makes
+  each mind private.
+- **Perspectives store only divergence.** A nested perspective holds a belief edge only where it differs from its parent. Reading is one
+  variable-length `INHERITS` walk. Writing is **copy-on-write per belief edge**: before an event updates a perspective, its children that did not
+  witness the event get the old value frozen (`via: 'retained'`).
+- **Perception routing is the core rule.** An event updates `mind:A>B>C` only if A, B and C all witnessed it. Private tells, public claims and reports
+  ("I told Maya her refund is approved") each have their own routing. The Hi-ToM trust rule ("believe a speaker who left the room after you")
+  is a Cypher predicate over `EXITED` edges.
+- **Nothing is deleted.** Superseded beliefs get `active:false, until:t`, so time travel is a query (`resolve_at`).
+- **`GRAPH.COPY` for what-ifs.** `plan_announcements` forks every graph of a scenario, simulates each plan, and measures the false beliefs left over.
+
+![A SecondOrder mind graph in FalkorDB Browser](docs/img/falkordb_browser.png)
+*`so:support:mind:Shipping` opened in the official FalkorDB Browser (`docker compose up`, then http://localhost:3000): Perspective nodes,
+`INHERITS` edges between nested perspectives, and `BELIEVES` edges to values.*
+
+**All 26 Cypher queries** the product runs are listed with explanations in [`docs/CYPHER.md`](docs/CYPHER.md). FalkorDB features used:
+- multigraph (one graph per agent plus a world graph);
+- ACL key patterns and `GRAPH.RO_QUERY`;
+- `GRAPH.COPY`;
+- `algo.SPpaths` (who-told-whom paths);
+- variable-length traversal;
+- range indexes;
+- parameterised Cypher.
+
+The core read:
+```cypher
+MATCH (p:Perspective) WHERE p.chain IN $prefixes
+WITH p ORDER BY p.depth DESC LIMIT 1
+MATCH path = (p)-[:INHERITS*0..6]->(q:Perspective)-[b:BELIEVES {entity: $entity, active: true}]->(v:Value)
+RETURN v.name, b.via, b.t, b.event, b.src, q.chain, length(path)
+ORDER BY length(path) ASC LIMIT 1
+```
+
+---
+
+## Getting started (Windows, macOS, Linux)
+
+SecondOrder needs **Python 3.12+** and a FalkorDB. On **macOS and Linux** it runs an **embedded FalkorDB** automatically (via `falkordblite`), so
+there's nothing else to install. On **Windows**, run FalkorDB in Docker (or use WSL2). `ANTHROPIC_API_KEY` is optional: without it everything
+runs, and the live-agent panel replays a recorded run.
+
+### Option A: Docker, any OS (simplest, includes FalkorDB Browser)
+```bash
+git clone https://github.com/TusharTechs/secondorder && cd secondorder
+docker compose up --build
+# app: http://localhost:8000      FalkorDB Browser: http://localhost:3000 (log in with host localhost, port 6379)
+```
+To enable the live Claude features: `ANTHROPIC_API_KEY=sk-ant-... docker compose up --build`. In PowerShell, run `$env:ANTHROPIC_API_KEY="sk-ant-..."` first.
+
+### Option B: macOS / Linux (no Docker, embedded FalkorDB)
+```bash
+git clone https://github.com/TusharTechs/secondorder && cd secondorder
+python3.12 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt && pip install -e .
+export ANTHROPIC_API_KEY=sk-ant-...           # optional
+uvicorn server.app:app --port 8000            # → http://localhost:8000
+```
+On Linux, the embedded FalkorDB wheel needs glibc ≥ 2.39 (Ubuntu 24.04+, Debian 13+, Fedora 40+). On older distros, use Option A or C.
+
+### Option C: Windows (PowerShell) with FalkorDB in Docker
+```powershell
+git clone https://github.com/TusharTechs/secondorder; cd secondorder
+docker run -d -p 6379:6379 -p 3000:3000 --name falkordb falkordb/falkordb:latest
+py -3.12 -m venv .venv; .\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt; pip install -e .
+$env:FALKORDB_HOST="localhost"; $env:FALKORDB_PORT="6379"
+$env:ANTHROPIC_API_KEY="sk-ant-..."            # optional
+uvicorn server.app:app --port 8000            # → http://localhost:8000
+```
+WSL2 users can follow Option B inside Ubuntu 24.04.
+
+### Option D: FalkorDB Cloud
+Create a free instance at https://app.falkordb.cloud, then set `FALKORDB_HOST`, `FALKORDB_PORT`, `FALKORDB_USERNAME` and `FALKORDB_PASSWORD` before
+starting the app (any OS).
+
+### Run the tests and the examples
+```bash
+python -m pytest -q tests                      # macOS/Linux use embedded FalkorDB; set FALKORDB_HOST on Windows
+python examples/quickstart.py                  # 5-line API tour
+python examples/sally_anne.py                  # the classic false-belief test
+python examples/claude_handoff.py              # needs ANTHROPIC_API_KEY
+```
+
+## Use it in your agents
+
+**Python (5 lines).** Embedded FalkorDB by default, or `Memory(..., host="localhost")` / FalkorDB Cloud.
+```python
+from secondorder import Memory                           # pip install git+https://github.com/TusharTechs/secondorder
+mem = Memory("support")
+mem.join(["Maya", "Billing"], "chat");  mem.say("Billing", "refund", "approved", room="chat")
+mem.leave("Maya");  mem.set("refund", "rejected", room="chat", by="Finance")     # Maya never sees this
+mem.believes("Maya", "refund")                 # 'approved'  (false belief)
+mem.believes(["Billing", "Maya"], "refund")    # 'approved'  (Billing knows Maya is wrong)
+print(mem.context_for("Billing", talking_to="Maya"))
+# - refund: you believe 'rejected', but Maya believes 'approved'. Correct this before relying on it.
+```
+See [`examples/`](examples): `quickstart.py`, `sally_anne.py`, and `claude_handoff.py`, which prepends `context_for` to a Claude call.
+
+**MCP (any agent):**
+```bash
+claude mcp add secondorder -- /path/.venv/bin/python /path/mcp_server.py                      # supervisor tools
+claude mcp add shipping -e SO_AGENT=Shipping -- /path/.venv/bin/python /path/mcp_server.py   # ACL-scoped agent
+```
+- **Supervisor tools:** `believes`, `false_beliefs`, `handoff_delta`, `who_knows`, `common_ground`, `explain`, `plan_announcements`, and `record`. `record` writes enter, exit, state, say, tell and report events.
+- **Agent tools:** `my_beliefs`, `what_does_person_believe`, `nested_belief` and `who_is_misinformed`, all read-only under the agent's ACL user.
+
+**Composes with fact stores.** Graphiti, Mem0 or Cognee store *facts*; SecondOrder stores *who knows them*. It's a thin layer next to any of
+them. `context_for()` output can be prepended to any framework's prompt.
+
+---
+
+## HTTP API
+
+All endpoints are served by `server/app.py`. `{sid}` is a scenario id: `support`, `org` or `sally`.
+
+| Method | Path | What it does |
+|---|---|---|
+| GET | `/api/{sid}/state` | Agents, entities, truth, timeline, every mind's perspectives, stats, false beliefs |
+| POST | `/api/{sid}/reset` | Rebuild the scenario |
+| GET | `/api/{sid}/believes?chain=A,B&entity=x&at=step` | Nested belief with provenance (optionally at a past step) |
+| GET | `/api/{sid}/explain?chain=A,B&entity=x` | Why a perspective believes what it does |
+| GET | `/api/{sid}/who_knows?entity=x` | Who is up to date |
+| GET | `/api/{sid}/common_ground?a=A&b=B` | Mutual knowledge |
+| GET | `/api/{sid}/handoff?sender=A&receiver=B` | Minimal handoff delta plus transcript vs. delta token counts |
+| POST | `/api/{sid}/handoff` | Write the handoff into memory |
+| GET | `/api/{sid}/plan?entity=x&speaker=A` | Private messages vs. announcement, simulated on `GRAPH.COPY` forks |
+| GET | `/api/{sid}/acl?agent=A&other=B` | Show the ACL boundary (A reading B's mind → NOPERM) |
+| GET | `/api/{sid}/graph?agent=A` | Raw nodes and edges of an agent's mind graph |
+| GET | `/api/{sid}/replay?entity=x` | Per-step presence, witnesses and 1st/2nd-order beliefs (Mind Theater) |
+| POST | `/api/{sid}/agent` | Run the flat vs. SecondOrder Claude agents (rate-limited) |
+| POST | `/api/{sid}/approve` | Write an approved agent reply back to memory |
+| POST | `/api/{sid}/event` | Live event composer: plain English → Claude → perception events |
+| POST | `/api/{sid}/ask` | Natural-language question → perspective chain → Cypher answer |
+| GET | `/api/hitom?order=4&deception=true` · `/api/hitom/{idx}` | Hi-ToM explorer |
+| GET | `/api/eval` · `/api/scale` · `/healthz` | Benchmark summaries, health check |
 
 ## Results in detail
 
@@ -173,126 +424,63 @@ python eval/summarise.py
 
 ---
 
-## Use it
-
-**Python (5 lines).** Embedded FalkorDB by default, or `Memory(..., host="localhost")` / FalkorDB Cloud.
-```python
-from secondorder import Memory                           # pip install git+https://github.com/TusharTechs/secondorder
-mem = Memory("support")
-mem.join(["Maya", "Billing"], "chat");  mem.say("Billing", "refund", "approved", room="chat")
-mem.leave("Maya");  mem.set("refund", "rejected", room="chat", by="Finance")     # Maya never sees this
-mem.believes("Maya", "refund")                 # 'approved'  (false belief)
-mem.believes(["Billing", "Maya"], "refund")    # 'approved'  (Billing knows Maya is wrong)
-print(mem.context_for("Billing", talking_to="Maya"))
-# - refund: you believe 'rejected', but Maya believes 'approved'. Correct this before relying on it.
-```
-See [`examples/`](examples): `quickstart.py`, `sally_anne.py`, and `claude_handoff.py`, which prepends `context_for` to a Claude call.
-
-**MCP (any agent):**
-```bash
-claude mcp add secondorder -- /path/.venv/bin/python /path/mcp_server.py                      # supervisor tools
-claude mcp add shipping -e SO_AGENT=Shipping -- /path/.venv/bin/python /path/mcp_server.py   # ACL-scoped agent
-```
-- **Supervisor tools:** `believes`, `false_beliefs`, `handoff_delta`, `who_knows`, `common_ground`, `explain`, `plan_announcements`, and `record`. `record` writes enter, exit, state, say, tell and report events.
-- **Agent tools:** `my_beliefs`, `what_does_person_believe`, `nested_belief` and `who_is_misinformed`, all read-only under the agent's ACL user.
-
-**Composes with fact stores.** Graphiti, Mem0 or Cognee store *facts*; SecondOrder stores *who knows them*. It's a thin layer next to any of
-them. `context_for()` output can be prepended to any framework's prompt.
-
----
-
-## Graph data model
+## Project structure
 
 ```
-one FalkorDB instance, many graphs
-├── so:<sid>:world                       ground truth + perception
-│     (:Agent)-[:IN {since, chapter}]->(:Room)          (:Agent)-[:EXITED {t, chapter}]->(:Room)
-│     (:Agent)-[:WITNESSED]->(:Event {seq, kind, text, room, actor})-[:ABOUT]->(:Entity)
-│     (:Agent)-[:PERFORMED]->(:Event)     (:Entity)-[:IS {t}]->(:Value)-[:LOCATED_IN]->(:Room)
-│     (:Agent)-[:TOLD {t, entity, value, public, trusted}]->(:Agent)
-├── so:<sid>:mind:Maya                   everything Maya believes
-├── so:<sid>:mind:Shipping               (FalkorDB ACL user agent_shipping: GRAPH.RO_QUERY on ~so:*:mind:Shipping only)
-│     (:Perspective {chain:'Shipping'})                 what Shipping believes
-│     (:Perspective {chain:'Shipping>Maya'})            what Shipping thinks Maya believes
-│     (:Perspective {chain:'Shipping>Maya>Billing'})    ... up to depth 4
-│     (child:Perspective)-[:INHERITS]->(parent:Perspective)
-│     (:Perspective)-[:BELIEVES {entity, active, t, until, via, src, event}]->(:Value)
-│     range index on :Perspective(chain)
-└── ...
+secondorder/
+├── secondorder/            # the library
+│   ├── engine.py           # graph model, perception routing, copy-on-write, resolve, time travel (all Cypher in dict Q)
+│   ├── memory.py           # developer API: Memory(...).join/say/set/tell/report/believes/context_for/...
+│   ├── tools.py            # false_beliefs, handoff_delta, who_knows, common_ground, explain, plan_announcements
+│   ├── agent_view.py       # ACL-scoped, read-only view of one agent's own mind graph
+│   ├── agent.py            # live Claude agent (flat / SecondOrder / hybrid) + context_block()
+│   ├── scenarios.py        # synthetic scenarios: support crew, company brain, Sally–Anne
+│   ├── hitom.py            # Hi-ToM adapter (story → events, question → perspective chain)
+│   ├── llm.py              # Claude calls: baselines, structured event extraction
+│   └── db.py               # FalkorDB connection (server / Cloud / embedded falkordblite)
+├── mcp_server.py           # MCP server (supervisor mode, or SO_AGENT=<name> ACL-scoped agent mode)
+├── server/
+│   ├── app.py              # FastAPI: HTTP API + static UI
+│   └── static/             # index.html (Mind Theater, D3 circle packing, force-graph, Chart.js), logo.svg
+├── eval/
+│   ├── run_graph.py        # SecondOrder on all 1,200 Hi-ToM questions (+ flat / no-nesting ablations)
+│   ├── run_llm.py          # Claude-only baselines and Claude event extraction
+│   ├── run_paraphrase.py   # free-prose generality test
+│   ├── run_agents.py       # agent-task eval (4 arms × 2 history lengths, Claude judge)
+│   ├── reference_oracle.py # replay every story through Hi-ToM's own Oracle code
+│   ├── scale.py            # 10k-graph multi-tenant + agents×depth + index benchmark
+│   ├── summarise.py        # builds results/summary.json, RESULTS.md, LABEL_ERRORS.md
+│   └── results/            # all raw results (JSON) so every number is checkable
+├── tests/                  # pytest: Sally–Anne, copy-on-write, time travel, handoff + ACL, announcements, Unicode
+├── examples/               # quickstart.py, sally_anne.py, claude_handoff.py
+├── third_party/hitom/      # Hi-ToM authors' oracle code (unmodified, Apache-2.0), used only by reference_oracle.py
+├── data/hitom.json         # Hi-ToM dataset (Apache-2.0)
+├── docs/                   # CYPHER.md, brand/ (logo), img/ (screenshots), video/demo.mp4
+├── Dockerfile · docker-compose.yml · render.yaml
+└── requirements.txt · pyproject.toml · .github/workflows/ci.yml
 ```
 
-```mermaid
-flowchart LR
-  E[event: move / say / tell / report] --> W[(world graph:<br/>who was present?)]
-  W -->|witnesses| R{route}
-  R -->|chains made only of witnesses| U[update belief edges]
-  R -->|children that did NOT witness| C[copy-on-write: freeze old belief]
-  U --> M1[(mind:A)]
-  U --> M2[(mind:B)]
-  C --> M1
-  Q[agent: what does B think C believes?] -->|ACL: only mind:B| M2
-```
+## Configuration
 
-**Key ideas**
-- **One graph per agent is the security boundary.** FalkorDB hosts thousands of isolated graphs in one instance, and an ACL user per agent makes
-  each mind private.
-- **Perspectives store only divergence.** A nested perspective holds a belief edge only where it differs from its parent. Reading is one
-  variable-length `INHERITS` walk. Writing is **copy-on-write per belief edge**: before an event updates a perspective, its children that did not
-  witness the event get the old value frozen (`via: 'retained'`).
-- **Perception routing is the core rule.** An event updates `mind:A>B>C` only if A, B and C all witnessed it. Private tells, public claims and reports
-  ("I told Maya her refund is approved") each have their own routing. The Hi-ToM trust rule ("believe a speaker who left the room after you")
-  is a Cypher predicate over `EXITED` edges.
-- **Nothing is deleted.** Superseded beliefs get `active:false, until:t`, so time travel is a query (`resolve_at`).
-- **`GRAPH.COPY` for what-ifs.** `plan_announcements` forks every graph of a scenario, simulates each plan, and measures the false beliefs left over.
+| Variable | Default | Purpose |
+|---|---|---|
+| `FALKORDB_HOST` | *(unset → embedded FalkorDB)* | Use a FalkorDB server or FalkorDB Cloud (required on Windows) |
+| `FALKORDB_PORT` / `FALKORDB_USERNAME` / `FALKORDB_PASSWORD` | `6379` / – / – | Server connection |
+| `FALKORDB_LITE_PATH` | `data/secondorder.db` | File for the embedded FalkorDB |
+| `ANTHROPIC_API_KEY` | – | Enables live Claude agents, the event composer, Ask, and the LLM evals |
+| `SO_LIVE_AGENT_RUNS_PER_HOUR` | `1000` (`20` on Render) | Rate limit for live agent runs on a public deployment |
+| `SO_ACL_SECRET` | random per process | Secret used to derive per-agent ACL passwords |
+| `SO_AGENT` / `SO_SCENARIO` | – / `support` | MCP server: agent mode and scenario id |
 
-![A SecondOrder mind graph in FalkorDB Browser](docs/img/falkordb_browser.png)
-*`so:support:mind:Shipping` opened in the official FalkorDB Browser (`docker compose up`, then http://localhost:3000): Perspective nodes,
-`INHERITS` edges between nested perspectives, and `BELIEVES` edges to values.*
+## Troubleshooting
 
-**All 26 Cypher queries** the product runs are listed with explanations in [`docs/CYPHER.md`](docs/CYPHER.md). FalkorDB features used:
-- multigraph (one graph per agent plus a world graph);
-- ACL key patterns and `GRAPH.RO_QUERY`;
-- `GRAPH.COPY`;
-- `algo.SPpaths` (who-told-whom paths);
-- variable-length traversal;
-- range indexes;
-- parameterised Cypher.
-
-The core read:
-```cypher
-MATCH (p:Perspective) WHERE p.chain IN $prefixes
-WITH p ORDER BY p.depth DESC LIMIT 1
-MATCH path = (p)-[:INHERITS*0..6]->(q:Perspective)-[b:BELIEVES {entity: $entity, active: true}]->(v:Value)
-RETURN v.name, b.via, b.t, b.event, b.src, q.chain, length(path)
-ORDER BY length(path) ASC LIMIT 1
-```
-
----
-
-## Setup
-
-```bash
-python3.12 -m venv .venv && .venv/bin/pip install -r requirements.txt && .venv/bin/pip install -e .
-.venv/bin/uvicorn server.app:app --port 8000          # http://localhost:8000 (embedded FalkorDB)
-docker compose up --build                              # or: FalkorDB server on :6379 + FalkorDB Browser on :3000 + app on :8000
-FALKORDB_LITE_PATH=/tmp/t.db .venv/bin/python -m pytest -q tests
-```
-- Set `FALKORDB_HOST/PORT/USERNAME/PASSWORD` to use FalkorDB Cloud.
-- `ANTHROPIC_API_KEY` is optional. It enables the live Claude agents, the event composer and the LLM evals. Without it the agent panel replays a recorded run.
-- Python 3.12+.
-
-```
-secondorder/engine.py      graph model, perception routing, copy-on-write, resolution, time travel (all Cypher in dict Q)
-secondorder/memory.py      developer API (Memory)
-secondorder/tools.py       false_beliefs, handoff_delta, who_knows, common_ground, explain, plan_announcements
-secondorder/agent_view.py  ACL-scoped, read-only view of one agent's own mind
-secondorder/agent.py       live Claude agent (flat vs SecondOrder) with approval-gated write-back
-secondorder/hitom.py       Hi-ToM adapter        secondorder/llm.py  Claude baselines + event extraction
-mcp_server.py              MCP server (supervisor and agent modes)
-server/                    FastAPI + UI (Mind Theater, D3, force-graph, Chart.js)
-eval/                      benchmark runners, reference-oracle check, scale benchmark, results
-third_party/hitom          Hi-ToM's own oracle code (Apache-2.0, unmodified), used only for the label check
-```
+| Symptom | Fix |
+|---|---|
+| `RuntimeError: Embedded FalkorDB (falkordblite) is not available` | You're on Windows or an older Linux. Start FalkorDB in Docker and set `FALKORDB_HOST=localhost` (Option C), or use `docker compose up` |
+| `pip` fails installing `falkordblite` | Needs Python 3.12+ and macOS or glibc ≥ 2.39. Use Docker or FalkorDB Cloud instead |
+| Live agent panel says "recorded run" | `ANTHROPIC_API_KEY` is not set (or the hourly limit was reached). Everything else works without it |
+| Port 6379 already in use | Map another port, e.g. `docker run -p 6390:6379 falkordb/falkordb` and set `FALKORDB_PORT=6390` |
+| Want to see the graphs | `docker compose up`, then open FalkorDB Browser at http://localhost:3000 and pick `so:support:mind:Shipping` |
 
 ## Prior art and what's new
 - **SymbolicToM** (Sclar et al., ACL 2023) tracks nested belief graphs inside an LLM prompting pipeline for reading comprehension.
@@ -317,4 +505,4 @@ explain every part of the graph model and queries. Claude models are also part o
 and the composer, and Opus/Haiku 5.5 as baselines.
 
 ## License
-MIT. Hi-ToM data (`data/hitom.json`) and `third_party/hitom` © the Hi-ToM authors, Apache-2.0.
+MIT © Tushar Agarwal. Hi-ToM data (`data/hitom.json`) and `third_party/hitom` © the Hi-ToM authors, Apache-2.0.

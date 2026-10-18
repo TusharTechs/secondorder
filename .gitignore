@@ -6,3 +6,7 @@ data/*.db.settings
 .env
 .DS_Store
 docs/video/raw/
+*.egg-info/
+docs/SUBMISSION.md
+docs/BLOG.md
+docs/video/record.py

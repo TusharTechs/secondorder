@@ -20,7 +20,6 @@ user and can read **only its own mind**: theory of mind, not omniscience.
 |---|---|
 | Live demo | **TODO: deployment URL** · or deploy your own: [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/TusharTechs/secondorder) |
 | Demo video | [`docs/video/demo.mp4`](docs/video/demo.mp4) (captioned walkthrough) |
-| Blog post | [`docs/BLOG.md`](docs/BLOG.md) |
 | Run locally (no Docker, no API key) | `pip install -r requirements.txt && uvicorn server.app:app` |
 
 ![The Mind Theater](docs/img/theater.png)
@@ -303,7 +302,7 @@ third_party/hitom          Hi-ToM's own oracle code (Apache-2.0, unmodified), us
   Benchmarks ran on embedded FalkorDB on a laptop, not a tuned server.
 
 ## Built with AI assistance (disclosure)
-This project was built during the hackathon (Oct 18, 2026) with **Claude Code** as a coding assistant. It helped with competitor and prior-art research, code
+This project was built during the hackathon (Oct 18, 2026) with **Claude Code** as a coding assistant. It helped with prior-art research, code
 generation, the evaluation harness and documentation drafts. The concept, design decisions and review are the author's, and the author can
 explain every part of the graph model and queries. Claude models are also part of the product: Claude Opus 5.5 for event extraction, the live agents
 and the composer, and Opus/Haiku 5.5 as baselines.

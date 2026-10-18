@@ -19,6 +19,7 @@
 |---|---|
 | 🌐 Live demo | Shared with the judges in the hackathon submission (it runs on a private, rate-limited API key). Run your own in one click: [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/TusharTechs/secondorder) or [locally](#getting-started-windows-macos-linux) |
 | 🎬 Demo video (4:25, narrated + captioned) | **[YouTube](https://youtu.be/wtpFoq5Ifgo)** · or the file [`docs/video/demo.mp4`](docs/video/demo.mp4) |
+| ✍️ Blog post (Dev.to) | [My AI agents knew everything except what each other knew, so I gave them theory of mind](https://dev.to/techtush/my-ai-agents-knew-everything-except-what-each-other-knew-so-i-gave-them-theory-of-mind-4mgb) |
 | 💻 Source code | https://github.com/TusharTechs/secondorder |
 | 🧾 Every Cypher query the product runs | [`docs/CYPHER.md`](docs/CYPHER.md) |
 | 📊 Benchmark results table | [`eval/results/RESULTS.md`](eval/results/RESULTS.md) |

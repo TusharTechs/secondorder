@@ -8,8 +8,8 @@ services:
       - key: ANTHROPIC_API_KEY
         sync: false
       - key: SO_LIVE_AGENT_RUNS_PER_HOUR
-        value: "20"
+        value: "10"
       - key: SO_ACL_SECRET
         generateValue: true
       - key: SO_LIVE_LLM_CALLS_PER_HOUR
-        value: "120"
+        value: "60"

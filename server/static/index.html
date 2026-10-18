@@ -7,7 +7,6 @@
 <meta name="description" content="Agent memory stores what is true. SecondOrder also stores what you know, and what you think I know: theory-of-mind memory for multi-agent systems, one FalkorDB graph per mind." />
 <meta property="og:title" content="SecondOrder: theory-of-mind memory for AI agents" />
 <meta property="og:description" content="One FalkorDB graph per mind. 100% on Hi-ToM vs the benchmark's own oracle, 20/20 agent corrections at constant context cost, 10k graphs in one instance." />
-<meta property="og:image" content="https://raw.githubusercontent.com/TusharTechs/secondorder/main/docs/img/theater.png" />
 <meta name="twitter:card" content="summary_large_image" />
 <link rel="icon" href="/static/logo.svg" type="image/svg+xml" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -239,7 +238,7 @@ tailwind.config = { theme: { extend: {
 <section id="tab-dev" class="hidden">
   <div class="grid md:grid-cols-2 gap-4 text-sm">
     <div class="card p-5"><h3 class="font-display font-semibold mb-2">5-line quickstart</h3>
-<pre class="font-mono text-xs text-slate-300 whitespace-pre-wrap bg-black/30 rounded-lg p-3">pip install git+https://github.com/TusharTechs/secondorder
+<pre class="font-mono text-xs text-slate-300 whitespace-pre-wrap bg-black/30 rounded-lg p-3">pip install -e .            # from a clone of this repository
 
 from secondorder import Memory
 mem = Memory("support")                                  # embedded FalkorDB, or host=...

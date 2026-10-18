@@ -17,7 +17,7 @@
 
 | What | Link |
 |---|---|
-| 🌐 Live demo | **TODO: Render URL** · deploy your own: [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/TusharTechs/secondorder) |
+| 🌐 Live demo | Shared with the judges in the hackathon submission (it runs on a private, rate-limited API key). Run your own in one click: [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/TusharTechs/secondorder) or [locally](#getting-started-windows-macos-linux) |
 | 🎬 Demo video (4:25, narrated + captioned) | [`docs/video/demo.mp4`](docs/video/demo.mp4) |
 | 💻 Source code | https://github.com/TusharTechs/secondorder |
 | 🧾 Every Cypher query the product runs | [`docs/CYPHER.md`](docs/CYPHER.md) |
@@ -468,8 +468,8 @@ secondorder/
 | `FALKORDB_PORT` / `FALKORDB_USERNAME` / `FALKORDB_PASSWORD` | `6379` / – / – | Server connection |
 | `FALKORDB_LITE_PATH` | `data/secondorder.db` | File for the embedded FalkorDB |
 | `ANTHROPIC_API_KEY` | – | Enables live Claude agents, the event composer, Ask, and the LLM evals |
-| `SO_LIVE_AGENT_RUNS_PER_HOUR` | `1000` (`20` on Render) | Rate limit for live agent runs on a public deployment |
-| `SO_LIVE_LLM_CALLS_PER_HOUR` | `2000` (`120` on Render) | Rate limit for the event composer and Ask on a public deployment |
+| `SO_LIVE_AGENT_RUNS_PER_HOUR` | `1000` (`10` on Render) | Rate limit for live agent runs on a public deployment |
+| `SO_LIVE_LLM_CALLS_PER_HOUR` | `2000` (`60` on Render) | Rate limit for the event composer and Ask on a public deployment |
 | `SO_ACL_SECRET` | random per process | Secret used to derive per-agent ACL passwords |
 | `SO_AGENT` / `SO_SCENARIO` | – / `support` | MCP server: agent mode and scenario id |
 

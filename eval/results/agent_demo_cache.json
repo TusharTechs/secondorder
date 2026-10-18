@@ -1,0 +1,138 @@
+{
+ "flat": {
+  "mode": "flat",
+  "agent": "Shipping",
+  "customer": "Maya",
+  "incoming": "Hi! Any update on order #4411?",
+  "draft": {
+   "message": "Hi Maya! I have an update on order #4411. The refund request wasn't approved, but a replacement has been approved for you. If you have any questions about the replacement, just let me know!",
+   "facts": [
+    {
+     "entity": "refund_4411",
+     "value": "rejected"
+    },
+    {
+     "entity": "replacement_4411",
+     "value": "approved"
+    }
+   ]
+  },
+  "trace": [
+   {
+    "tool": "my_facts",
+    "args": {},
+    "result": {
+     "refund_4411": {
+      "value": "rejected",
+      "via": "told",
+      "step": 34,
+      "from": "Escalation",
+      "held_by": "Shipping"
+     },
+     "replacement_4411": {
+      "value": "approved",
+      "via": "told",
+      "step": 36,
+      "from": "Escalation",
+      "held_by": "Shipping"
+     }
+    }
+   },
+   {
+    "tool": "draft_reply",
+    "args": {
+     "message": "Hi Maya! I have an update on order #4411. The refund request wasn't approved, but a replacement has been approved for you. If you have any questions about the replacement, just let me know!",
+     "facts": [
+      {
+       "entity": "refund_4411",
+       "value": "rejected"
+      },
+      {
+       "entity": "replacement_4411",
+       "value": "approved"
+      }
+     ]
+    },
+    "result": {
+     "ok": true
+    }
+   }
+  ]
+ },
+ "secondorder": {
+  "mode": "secondorder",
+  "agent": "Shipping",
+  "customer": "Maya",
+  "incoming": "Hi! Any update on order #4411?",
+  "draft": {
+   "message": "Hi Maya, thanks for checking in! I need to correct something first: the refund for order #4411 was not approved. It was rejected, and I'm sorry if you heard otherwise. The good news is that a replacement for #4411 has been approved.",
+   "facts": [
+    {
+     "entity": "refund_4411",
+     "value": "rejected"
+    },
+    {
+     "entity": "replacement_4411",
+     "value": "approved"
+    }
+   ]
+  },
+  "trace": [
+   {
+    "tool": "my_facts",
+    "args": {},
+    "result": {
+     "refund_4411": {
+      "value": "rejected",
+      "via": "told",
+      "step": 34,
+      "from": "Escalation",
+      "held_by": "Shipping"
+     },
+     "replacement_4411": {
+      "value": "approved",
+      "via": "told",
+      "step": 36,
+      "from": "Escalation",
+      "held_by": "Shipping"
+     }
+    }
+   },
+   {
+    "tool": "who_is_misinformed",
+    "args": {},
+    "result": [
+     {
+      "agent": "Maya",
+      "entity": "refund_4411",
+      "they_believe": "approved",
+      "i_believe": "rejected",
+      "via": "reported",
+      "step": 35,
+      "from": "Escalation",
+      "held_by": "Shipping>Maya"
+     }
+    ]
+   },
+   {
+    "tool": "draft_reply",
+    "args": {
+     "message": "Hi Maya, thanks for checking in! I need to correct something first: the refund for order #4411 was not approved. It was rejected, and I'm sorry if you heard otherwise. The good news is that a replacement for #4411 has been approved.",
+     "facts": [
+      {
+       "entity": "refund_4411",
+       "value": "rejected"
+      },
+      {
+       "entity": "replacement_4411",
+       "value": "approved"
+      }
+     ]
+    },
+    "result": {
+     "ok": true
+    }
+   }
+  ]
+ }
+}

@@ -1,0 +1,13 @@
+# FalkorDB server + SecondOrder app.  docker compose up --build  ->  http://localhost:8000
+services:
+  falkordb:
+    image: falkordb/falkordb:latest
+    ports: ["6379:6379", "3000:3000"]   # 3000 = FalkorDB Browser, to inspect the mind graphs
+  app:
+    build: .
+    ports: ["8000:8000"]
+    environment:
+      FALKORDB_HOST: falkordb
+      FALKORDB_PORT: "6379"
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+    depends_on: [falkordb]

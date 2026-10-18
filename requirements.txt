@@ -1,0 +1,8 @@
+falkordb>=1.8
+falkordblite>=0.10
+anthropic>=1.15
+fastapi>=0.144
+uvicorn[standard]>=0.30
+pydantic>=2
+mcp>=2
+redis>=6

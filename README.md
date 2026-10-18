@@ -34,7 +34,7 @@
 ## Contents
 [Why](#why) · [Headline results](#headline-results) · [What it does](#what-it-does) · [Architecture](#architecture) · [Getting started](#getting-started-windows-macos-linux)
 · [Use it in your agents](#use-it-in-your-agents) · [HTTP API](#http-api) · [Results in detail](#results-in-detail) · [Project structure](#project-structure)
-· [Configuration](#configuration) · [Troubleshooting](#troubleshooting) · [Prior art](#prior-art-and-whats-new) · [Limits](#honest-limits)
+· [Configuration](#configuration) · [Troubleshooting](#troubleshooting) · [For the FalkorDB team](#for-the-falkordb-team-integration-paths-and-findings) · [Prior art](#prior-art-and-whats-new) · [Limits](#honest-limits)
 
 ## Why
 
@@ -481,6 +481,23 @@ secondorder/
 | Live agent panel says "recorded run" | `ANTHROPIC_API_KEY` is not set (or the hourly limit was reached). Everything else works without it |
 | Port 6379 already in use | Map another port, e.g. `docker run -p 6390:6379 falkordb/falkordb` and set `FALKORDB_PORT=6390` |
 | Want to see the graphs | `docker compose up`, then open FalkorDB Browser at http://localhost:3000 and pick `so:support:mind:Shipping` |
+
+## For the FalkorDB team: integration paths and findings
+
+**Where SecondOrder could plug into the FalkorDB stack**
+| Integration | How | Effort |
+|---|---|---|
+| FalkorDB MCP server | Add the 5 read tools (`believes`, `false_beliefs`, `handoff_delta`, `who_knows`, `explain`) as optional "perspective" tools. They're plain parameterised Cypher ([`docs/CYPHER.md`](docs/CYPHER.md)) | small |
+| GraphRAG-SDK / agent memory | Use `context_for(agent, talking_to)` as a retrieval step: the context a model needs depends on *who it's talking to*, not only on the query | small |
+| Graphiti / Mem0 / Cognee on FalkorDB | Keep facts there and keep *who-knows-what* in SecondOrder mind graphs on the same instance; the `Memory.say/tell/report` events map to their episode ingestion | medium |
+| Multi-tenant agent platforms | The per-agent ACL key pattern (`~so:*:mind:<agent>` + `GRAPH.RO_QUERY`) is a reusable recipe for "agents can read only their own memory" | docs |
+
+**What we measured about FalkorDB for this workload**
+- **Many tiny graphs work well:** 10,200 graphs in one instance at 2.9 ms p50 per event, with flat latency from 1k to 10k graphs.
+- **Per-graph memory is the main cost at scale:** about 490 KB baseline per graph with default load-time settings, against about 2 KB per perspective of actual data. A lighter
+  profile for many small graphs (e.g. a smaller `NODE_CREATION_BUFFER`) would help agent-memory workloads.
+- **Indexes matter at scale:** a range index on `Perspective(chain)` cut event cost from 57 ms to 23 ms at 16 agents and depth 3.
+- **Server parity:** the whole Hi-ToM run gives identical results on embedded FalkorDB (falkordblite 0.10) and on the `falkordb/falkordb:latest` server (v4.22.1).
 
 ## Prior art and what's new
 - **SymbolicToM** (Sclar et al., ACL 2023) tracks nested belief graphs inside an LLM prompting pipeline for reading comprehension.

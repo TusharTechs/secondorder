@@ -5,7 +5,7 @@
   "customer": "Maya",
   "incoming": "Hi! Any update on order #4411?",
   "draft": {
-   "message": "Hi Maya! I have an update on order #4411. The refund request wasn't approved, but a replacement has been approved for you. If you have any questions about the replacement, just let me know!",
+   "message": "Hi Maya, thanks for checking in on order #4411! Our escalation team didn't approve the refund for this order, but they did approve a replacement. Sorry I can't give you a refund, and I hope the replacement fixes things. Let me know if you have any questions.",
    "facts": [
     {
      "entity": "refund_4411",
@@ -41,7 +41,7 @@
    {
     "tool": "draft_reply",
     "args": {
-     "message": "Hi Maya! I have an update on order #4411. The refund request wasn't approved, but a replacement has been approved for you. If you have any questions about the replacement, just let me know!",
+     "message": "Hi Maya, thanks for checking in on order #4411! Our escalation team didn't approve the refund for this order, but they did approve a replacement. Sorry I can't give you a refund, and I hope the replacement fixes things. Let me know if you have any questions.",
      "facts": [
       {
        "entity": "refund_4411",
@@ -65,7 +65,7 @@
   "customer": "Maya",
   "incoming": "Hi! Any update on order #4411?",
   "draft": {
-   "message": "Hi Maya, thanks for checking in! I need to correct something first: the refund for order #4411 was not approved. It was rejected, and I'm sorry if you heard otherwise. The good news is that a replacement for #4411 has been approved.",
+   "message": "Hi Maya, thanks for checking in on order #4411! I need to correct something first: the refund on this order was not approved. It was rejected. The good news is that a replacement for order #4411 has been approved. I'm sorry for the mix-up, and I'm happy to help with anything else.",
    "facts": [
     {
      "entity": "refund_4411",
@@ -117,7 +117,7 @@
    {
     "tool": "draft_reply",
     "args": {
-     "message": "Hi Maya, thanks for checking in! I need to correct something first: the refund for order #4411 was not approved. It was rejected, and I'm sorry if you heard otherwise. The good news is that a replacement for #4411 has been approved.",
+     "message": "Hi Maya, thanks for checking in on order #4411! I need to correct something first: the refund on this order was not approved. It was rejected. The good news is that a replacement for order #4411 has been approved. I'm sorry for the mix-up, and I'm happy to help with anything else.",
      "facts": [
       {
        "entity": "refund_4411",

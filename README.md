@@ -16,8 +16,9 @@ it.
 
 | | |
 |---|---|
-| Live demo | **TODO: deployment URL** |
-| Demo video | **TODO: video URL** |
+| Live demo | **TODO: deployment URL** · or deploy your own: [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/TusharTechs/secondorder) |
+| Demo video | [`docs/video/demo.mp4`](docs/video/demo.mp4) (2:26, captioned) |
+| Blog post | [`docs/BLOG.md`](docs/BLOG.md) |
 | Run locally | `pip install -r requirements.txt && uvicorn server.app:app` (no Docker, no API key needed) |
 
 ![Support crew demo](docs/img/support_handoff.png)
@@ -75,12 +76,14 @@ thinks the carrot is?"*
 | **SecondOrder (FalkorDB)** | 1200 | **87.8** | 100.0 | 100.0 | 85.4 | 79.2 | 74.2 | **98.8** |
 | **SecondOrder + Claude event extraction**² | 1200 | **87.8** | 100.0 | 100.0 | 85.4 | 79.2 | 74.2 | **98.8** |
 | Claude Opus 5.5 alone (chain of thought) | 1200 | 80.4 | 100.0 | 95.0 | 70.8 | 70.0 | 66.2 | 90.5 |
-| Claude Haiku 5.5 alone | see `eval/results/RESULTS.md` | | | | | | | |
+| Claude Haiku 5.5 alone | 1200 | 78.4 | 100.0 | 90.0 | 72.1 | 68.8 | 61.2 | 87.8 |
 | Flat memory (stores the latest fact) | 1200 | 53.1 | 100.0 | 55.0 | 32.9 | 38.3 | 39.2 | 55.2 |
 | Per-agent memory, no nesting | 1200 | 65.4 | 100.0 | 100.0 | 49.6 | 43.8 | 33.8 | 71.7 |
 
 **Free text (no templates):** Claude rewrote 100 stratified stories as varied natural prose. SecondOrder with Claude extraction scored **93/100**, and
 Claude Opus 5.5 reading the same prose alone scored **83/100** (`eval/run_paraphrase.py`).
+
+![Benchmark](docs/img/bench.png)
 
 - **Ablations:** both cheaper memory designs collapse at order ≥ 2. A flat memory (even one that knows the truth) answers "where does A think B thinks…" with
   the current fact. Per-agent memory without nesting can't separate A's belief from A's model of B. **The nesting is the thing.**

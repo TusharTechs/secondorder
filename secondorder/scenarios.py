@@ -69,7 +69,8 @@ def handoff(sc: Scenario, sender: str, receiver: str, delta: dict):
     """Write a computed handoff delta into memory as private messages (sender -> receiver)."""
     for f in delta["facts"]:
         if f.get("second_order"):
-            sc._apply(f["entity"], {(receiver, f["about"]): (f["value"], "reported", sender)},
+            sc._apply(f["entity"], {(receiver, f["about"]): (f["value"], "reported", sender),
+                                    (sender, receiver, f["about"]): (f["value"], "reported", sender)},
                       sc._record("tell", f"{sender} -> {receiver} (handoff): {f['tell']}.", actor=sender,
                                  entity=f["entity"], witnesses=[sender, receiver]))
         else:

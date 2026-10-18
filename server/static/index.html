@@ -295,7 +295,7 @@ async function loadHitom(i) {
     <div class="mb-3">Gold: <b>${d.answer}</b> · SecondOrder: <b class="${d.ok ? 'right' : 'wrong'}">${d.secondorder}</b>
     <span class="text-xs text-slate-500">(built ${d.stats.graphs} graphs, ${d.stats.perspectives}/${d.stats.possible_perspectives} perspectives in ${d.build_ms} ms)</span>${llm}</div>
     <div class="grid md:grid-cols-2 gap-4"><div><div class="text-xs text-slate-400 mb-1">Story</div>${d.story.map((s, k) => `<div class="text-xs"><span class="text-slate-500 mono">${k + 1}</span> ${s}</div>`).join("")}</div>
-    <div><div class="text-xs text-slate-400 mb-1">Why (from the graph)</div>${d.explain ? d.explain.steps.map(s => `<div class="text-xs mb-1">• ${s}</div>`).join("") : ''}</div></div>
+    <div><div class="text-xs text-slate-400 mb-1">Why (read from the graph, level by level)</div>${(d.reasoning || []).map((r, k) => `<div class="text-xs mb-1" style="margin-left:${k * 12}px">↳ ${r.text}</div>`).join("")}</div></div>
     <div class="text-xs text-slate-400 mt-3">Belief of each nested perspective at every step (hover for event; letters = container initials):</div>${evo}</div>`;
 }
 

@@ -221,6 +221,15 @@ def hitom_item(idx: int):
         for ev in steps:
             row.append(sc.resolve(chain[:k], entity, at=ev["seq"]).value)
         evolution.append({"chain": chain[:k], "values": row})
+    reasoning = []
+    for k in range(1, len(chain) + 1):
+        bk = sc.resolve(chain[:k], entity)
+        ev = sc.event(bk.event)
+        who = " thinks ".join(chain[:k - 1])
+        head = (f"{who} thinks {chain[k - 1]} believes" if k > 1 else f"{chain[0]} believes")
+        reasoning.append({"chain": chain[:k], "value": bk.value, "via": bk.via,
+                          "text": f"{head} the {entity} is in the {bk.value}" + (
+                              f": {bk.via} at step {ev['seq']} (“{ev['text']}”, witnessed by {', '.join(ev['witnesses'])})" if ev else "")})
     llm = {}
     for m in ("claude-opus-5-5", "claude-haiku-5-5"):
         r = _load_results(f"llm_{m}.json")
@@ -229,7 +238,7 @@ def hitom_item(idx: int):
     out = {"idx": idx, "question": x["question"], "answer": x["answer"], "order": x["question_order"],
            "deception": x["deception"], "story": [e["text"] for e in events], "timeline": steps,
            "chain": chain, "entity": entity, "secondorder": b.value, "ok": b.value == x["answer"],
-           "explain": tools.explain(sid, chain, entity) if chain else None, "evolution": evolution,
+           "explain": tools.explain(sid, chain, entity) if chain else None, "evolution": evolution, "reasoning": reasoning,
            "llm": llm, "build_ms": round(ms, 1), "stats": sc.stats(),
            "minds": {a: sc.perspectives(a) for a in sc.agents}}
     sc.delete()

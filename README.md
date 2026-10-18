@@ -18,7 +18,7 @@
 | What | Link |
 |---|---|
 | 🌐 Live demo | **TODO: Render URL** · deploy your own: [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/TusharTechs/secondorder) |
-| 🎬 Demo video (3:39, captioned) | [`docs/video/demo.mp4`](docs/video/demo.mp4) |
+| 🎬 Demo video (4:25, narrated + captioned) | [`docs/video/demo.mp4`](docs/video/demo.mp4) |
 | 💻 Source code | https://github.com/TusharTechs/secondorder |
 | 🧾 Every Cypher query the product runs | [`docs/CYPHER.md`](docs/CYPHER.md) |
 | 📊 Benchmark results table | [`eval/results/RESULTS.md`](eval/results/RESULTS.md) |

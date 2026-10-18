@@ -130,7 +130,8 @@ We replayed every story through **Hi-ToM's own published belief-tracking code**:
 So 147 released labels (concentrated in orders 2–4) are inconsistent with the generator's own code. The repo history has a commit "fix permutation
 bug" (`9117f35d`) that changed how nested beliefs are written, which may explain the drift. All 147 are listed with the released label, the
 reference answer, SecondOrder's answer and Opus's answer in [`eval/results/LABEL_ERRORS.md`](eval/results/LABEL_ERRORS.md). Claude Opus 5.5,
-independently and without the graph, sides with the reference code on 134 of them.
+independently and without the graph, sides with the reference code on 134 of them. We reported this to the authors:
+[ying-hui-he/Hi-ToM_dataset#4](https://github.com/ying-hui-he/Hi-ToM_dataset/issues/4).
 
 ### Scale (one FalkorDB instance)
 [`eval/scale.py`](eval/scale.py) runs on embedded FalkorDB 4.18 on a laptop.

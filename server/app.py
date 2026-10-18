@@ -1,7 +1,6 @@
 """SecondOrder web API + demo UI."""
 from __future__ import annotations
 
-import collections
 import concurrent.futures
 import json
 import os
@@ -12,13 +11,13 @@ from functools import lru_cache
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from fastapi import FastAPI, HTTPException  # noqa: E402
-from fastapi.responses import FileResponse, JSONResponse  # noqa: E402
+from fastapi.responses import FileResponse  # noqa: E402
 from fastapi.staticfiles import StaticFiles  # noqa: E402
 from pydantic import BaseModel, Field  # noqa: E402
 
 from secondorder import tools  # noqa: E402
 from secondorder.agent_view import AgentView  # noqa: E402
-from secondorder.engine import Q, Scenario  # noqa: E402
+from secondorder.engine import Scenario  # noqa: E402
 from secondorder.hitom import parse_question, parse_story, run_events  # noqa: E402
 from secondorder.scenarios import build_org, build_sally, build_support, handoff  # noqa: E402
 

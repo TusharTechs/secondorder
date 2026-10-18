@@ -12,7 +12,7 @@ from functools import lru_cache
 
 import redis
 
-from .db import conn, get_db
+from .db import conn
 from .engine import Q, UNKNOWN, chain_key, mind_key
 
 

@@ -8,7 +8,6 @@ communicates, which (after approval) are written back to memory as a message in 
 from __future__ import annotations
 
 import json
-from typing import Optional
 
 import anthropic
 

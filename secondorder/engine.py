@@ -23,7 +23,6 @@ only its own model of it.
 from __future__ import annotations
 
 import itertools
-import json
 from dataclasses import dataclass, field
 from typing import Iterable, Optional
 
@@ -402,9 +401,9 @@ class Scenario:
         self._register(speaker, *W)
         t = self._record("claim", text or f"{speaker} said in {room} that {entity} is {value}.", room=room,
                          actor=speaker, entity=entity, value=value, witnesses=W)
-        for l in W:
-            if l != speaker:
-                self.world.query(Q["told"], dict(speaker=speaker, listener=l, t=t, entity=entity, value=value,
+        for listener in W:
+            if listener != speaker:
+                self.world.query(Q["told"], dict(speaker=speaker, listener=listener, t=t, entity=entity, value=value,
                                                  public=True, trusted=True))
         self._apply(entity, {c: (value, "told", speaker) for c in self._chains_among(W)}, t)
         self.save()
@@ -437,18 +436,18 @@ class Scenario:
         """Public claim heard by everyone (Hi-ToM: all agents). Believers update; the speaker assumes everyone did."""
         self._register(speaker)
         L = [a for a in (listeners or self.agents) if a != speaker]
-        believers = [l for l in L if self.trusts(l, speaker)]
+        believers = [x for x in L if self.trusts(x, speaker)]
         t = self._record("claim", text or f"{speaker} publicly claimed that {entity} is in the {value}.",
                          actor=speaker, entity=entity, value=value, witnesses=[speaker] + L)
-        for l in L:
-            self.world.query(Q["told"], dict(speaker=speaker, listener=l, t=t, entity=entity, value=value,
-                                             public=True, trusted=l in believers))
+        for listener in L:
+            self.world.query(Q["told"], dict(speaker=speaker, listener=listener, t=t, entity=entity, value=value,
+                                             public=True, trusted=listener in believers))
         ups = {}
         for b in believers:
             ups[(b,)] = (value, "told", speaker)
             ups[(b, speaker)] = (value, "told", speaker)
-        for l in L:
-            ups[(speaker, l)] = (value, "assumed-trusted", speaker)
+        for listener in L:
+            ups[(speaker, listener)] = (value, "assumed-trusted", speaker)
         self._apply(entity, ups, t)
         self.save()
         return t

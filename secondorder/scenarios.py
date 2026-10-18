@@ -47,7 +47,7 @@ def build_support(sid: str = SUPPORT_SID) -> Scenario:
     sc.exit("Maya", text="Maya leaves the chat.")
     sc.exit("Billing", text="Billing closes the chat.")
     sc.enter(["Billing", "Finance", "Escalation"], "ops-internal", text="Billing, Finance and Escalation are in #ops-internal.")
-    for i, (who, msg) in enumerate(OPS_CHATTER[:9]):
+    for who, msg in OPS_CHATTER[:9]:
         sc.chatter("ops-internal", f"{who}: {msg}", actor=who)
     sc.report("Billing", "ops-internal", "Maya", "refund_4411", "approved",
               text="Billing: FYI, I told the customer on #4411 that her refund is approved.")

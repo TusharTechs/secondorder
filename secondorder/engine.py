@@ -207,6 +207,7 @@ class Scenario:
     chapter: int = 0
     room: Optional[str] = None
     quiet_rooms: tuple = ("waiting_room",)
+    index: bool = True
     _known: dict = field(default_factory=dict)  # owner -> set of perspective chains already merged
 
     # ------------------------------------------------------------------ plumbing
@@ -314,6 +315,11 @@ class Scenario:
             for ch in U | M:
                 for k in range(1, len(ch) + 1):
                     needed.add(ch[:k])
+            if root not in self._known and self.index:
+                try:  # one range index per mind graph: perspective lookup by chain is the hot path
+                    self.mind(root).query("CREATE INDEX FOR (p:Perspective) ON (p.chain)")
+                except Exception:
+                    pass  # already exists
             known = self._known.setdefault(root, set())
             new = sorted(needed - known, key=len)
             g = self.mind(root)

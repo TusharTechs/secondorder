@@ -14,7 +14,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from fastapi import FastAPI, HTTPException  # noqa: E402
 from fastapi.responses import FileResponse, JSONResponse  # noqa: E402
 from fastapi.staticfiles import StaticFiles  # noqa: E402
-from pydantic import BaseModel  # noqa: E402
+from pydantic import BaseModel, Field  # noqa: E402
 
 from secondorder import tools  # noqa: E402
 from secondorder.agent_view import AgentView  # noqa: E402
@@ -36,7 +36,12 @@ def index():
     return FileResponse(os.path.join(STATIC, "index.html"))
 
 
+ALLOWED = {"support", "org"}
+
+
 def _ensure(sid):
+    if sid not in ALLOWED:
+        raise HTTPException(404, "unknown scenario")
     sc = Scenario.load(sid)
     if not sc.agents:
         if sid == "support":
@@ -65,6 +70,8 @@ def state(sid: str):
 
 @app.post("/api/{sid}/reset")
 def reset(sid: str):
+    if sid not in ALLOWED:
+        raise HTTPException(404, "unknown scenario")
     if sid == "support":
         build_support()
     elif sid == "org":
@@ -147,7 +154,7 @@ def acl(sid: str, agent: str, other: str):
 class AgentReq(BaseModel):
     agent: str = "Shipping"
     customer: str = "Maya"
-    message: str = "Hi! Any update on order #4411?"
+    message: str = Field("Hi! Any update on order #4411?", max_length=400)
 
 
 CACHE_AGENT = os.path.join(RESULTS, "agent_demo_cache.json")
@@ -169,8 +176,9 @@ def run_agent(sid: str, req: AgentReq):
     with concurrent.futures.ThreadPoolExecutor(2) as ex:
         futs = {m: ex.submit(agent.run, sid, req.agent, req.customer, req.message, m) for m in ("flat", "secondorder")}
         out = {m: f.result() for m, f in futs.items()}
-    os.makedirs(RESULTS, exist_ok=True)
-    json.dump(out, open(CACHE_AGENT, "w"), indent=1)
+    if os.getenv("SO_RECORD_AGENT_CACHE") == "1":  # only when deliberately recording the replay
+        os.makedirs(RESULTS, exist_ok=True)
+        json.dump(out, open(CACHE_AGENT, "w"), indent=1)
     return out
 
 
@@ -202,6 +210,8 @@ def _load_results(name):
 
 @app.get("/api/hitom/{idx}")
 def hitom_item(idx: int):
+    if not 0 <= idx < len(_hitom()):
+        raise HTTPException(404, "no such question")
     x = _hitom()[idx]
     sid = f"hitom{idx}"
     sc = Scenario(sid, depth=4, trust="hitom")

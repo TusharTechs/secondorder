@@ -9,3 +9,5 @@ services:
         sync: false
       - key: SO_LIVE_AGENT_RUNS_PER_HOUR
         value: "20"
+      - key: SO_ACL_SECRET
+        generateValue: true

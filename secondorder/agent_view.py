@@ -16,8 +16,11 @@ from .db import conn, get_db
 from .engine import Q, UNKNOWN, chain_key, mind_key
 
 
+_SECRET = os.getenv("SO_ACL_SECRET") or secrets.token_hex(16)  # random per process unless configured
+
+
 def _password(agent: str) -> str:
-    return os.getenv("SO_ACL_SECRET", "so-dev") + "-" + agent
+    return f"{_SECRET}-{agent}"
 
 
 def ensure_acl_user(agent: str) -> str:

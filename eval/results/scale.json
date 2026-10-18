@@ -1,0 +1,249 @@
+{
+ "agents_depth": [
+  {
+   "agents": 4,
+   "depth": 2,
+   "index": true,
+   "perspectives": 16,
+   "possible": 16,
+   "belief_edges": 52,
+   "event_ms_median": 2.7,
+   "read_ms_median": 0.21
+  },
+  {
+   "agents": 4,
+   "depth": 2,
+   "index": false,
+   "perspectives": 16,
+   "possible": 16,
+   "belief_edges": 52,
+   "event_ms_median": 2.0,
+   "read_ms_median": 0.18
+  },
+  {
+   "agents": 8,
+   "depth": 2,
+   "index": true,
+   "perspectives": 64,
+   "possible": 64,
+   "belief_edges": 208,
+   "event_ms_median": 3.2,
+   "read_ms_median": 0.19
+  },
+  {
+   "agents": 8,
+   "depth": 2,
+   "index": false,
+   "perspectives": 64,
+   "possible": 64,
+   "belief_edges": 208,
+   "event_ms_median": 2.8,
+   "read_ms_median": 0.16
+  },
+  {
+   "agents": 16,
+   "depth": 2,
+   "index": true,
+   "perspectives": 256,
+   "possible": 256,
+   "belief_edges": 832,
+   "event_ms_median": 5.5,
+   "read_ms_median": 0.17
+  },
+  {
+   "agents": 16,
+   "depth": 2,
+   "index": false,
+   "perspectives": 256,
+   "possible": 256,
+   "belief_edges": 832,
+   "event_ms_median": 5.3,
+   "read_ms_median": 0.17
+  },
+  {
+   "agents": 32,
+   "depth": 2,
+   "index": true,
+   "perspectives": 1024,
+   "possible": 1024,
+   "belief_edges": 3328,
+   "event_ms_median": 12.0,
+   "read_ms_median": 0.17
+  },
+  {
+   "agents": 32,
+   "depth": 2,
+   "index": false,
+   "perspectives": 1024,
+   "possible": 1024,
+   "belief_edges": 3328,
+   "event_ms_median": 12.4,
+   "read_ms_median": 0.17
+  },
+  {
+   "agents": 4,
+   "depth": 3,
+   "index": true,
+   "perspectives": 40,
+   "possible": 40,
+   "belief_edges": 124,
+   "event_ms_median": 1.9,
+   "read_ms_median": 0.17
+  },
+  {
+   "agents": 4,
+   "depth": 3,
+   "index": false,
+   "perspectives": 40,
+   "possible": 40,
+   "belief_edges": 124,
+   "event_ms_median": 1.8,
+   "read_ms_median": 0.17
+  },
+  {
+   "agents": 8,
+   "depth": 3,
+   "index": true,
+   "perspectives": 400,
+   "possible": 400,
+   "belief_edges": 1240,
+   "event_ms_median": 4.4,
+   "read_ms_median": 0.17
+  },
+  {
+   "agents": 8,
+   "depth": 3,
+   "index": false,
+   "perspectives": 400,
+   "possible": 400,
+   "belief_edges": 1240,
+   "event_ms_median": 4.8,
+   "read_ms_median": 0.17
+  },
+  {
+   "agents": 12,
+   "depth": 3,
+   "index": true,
+   "perspectives": 1464,
+   "possible": 1464,
+   "belief_edges": 4548,
+   "event_ms_median": 11.3,
+   "read_ms_median": 0.17
+  },
+  {
+   "agents": 12,
+   "depth": 3,
+   "index": false,
+   "perspectives": 1464,
+   "possible": 1464,
+   "belief_edges": 4548,
+   "event_ms_median": 17.4,
+   "read_ms_median": 0.18
+  },
+  {
+   "agents": 16,
+   "depth": 3,
+   "index": true,
+   "perspectives": 3616,
+   "possible": 3616,
+   "belief_edges": 11248,
+   "event_ms_median": 22.7,
+   "read_ms_median": 0.17
+  },
+  {
+   "agents": 16,
+   "depth": 3,
+   "index": false,
+   "perspectives": 3616,
+   "possible": 3616,
+   "belief_edges": 11248,
+   "event_ms_median": 57.3,
+   "read_ms_median": 0.18
+  }
+ ],
+ "multitenant": {
+  "rows": [
+   {
+    "tenants": 170,
+    "graphs": 1020,
+    "event_p50_ms": 2.52,
+    "event_p99_ms": 8.05,
+    "read_p50_ms": 0.182,
+    "used_memory_mb": 790.0
+   },
+   {
+    "tenants": 340,
+    "graphs": 2040,
+    "event_p50_ms": 2.64,
+    "event_p99_ms": 8.13,
+    "read_p50_ms": 0.188,
+    "used_memory_mb": 1580.3
+   },
+   {
+    "tenants": 510,
+    "graphs": 3060,
+    "event_p50_ms": 2.69,
+    "event_p99_ms": 8.62,
+    "read_p50_ms": 0.188,
+    "used_memory_mb": 2377.9
+   },
+   {
+    "tenants": 680,
+    "graphs": 4080,
+    "event_p50_ms": 2.74,
+    "event_p99_ms": 8.22,
+    "read_p50_ms": 0.193,
+    "used_memory_mb": 3175.0
+   },
+   {
+    "tenants": 850,
+    "graphs": 5100,
+    "event_p50_ms": 2.76,
+    "event_p99_ms": 9.96,
+    "read_p50_ms": 0.198,
+    "used_memory_mb": 3962.9
+   },
+   {
+    "tenants": 1020,
+    "graphs": 6120,
+    "event_p50_ms": 2.9,
+    "event_p99_ms": 14.64,
+    "read_p50_ms": 0.204,
+    "used_memory_mb": 4628.7
+   },
+   {
+    "tenants": 1190,
+    "graphs": 7140,
+    "event_p50_ms": 2.76,
+    "event_p99_ms": 10.17,
+    "read_p50_ms": 0.196,
+    "used_memory_mb": 5423.3
+   },
+   {
+    "tenants": 1360,
+    "graphs": 8160,
+    "event_p50_ms": 2.79,
+    "event_p99_ms": 8.29,
+    "read_p50_ms": 0.201,
+    "used_memory_mb": 6213.7
+   },
+   {
+    "tenants": 1530,
+    "graphs": 9180,
+    "event_p50_ms": 2.87,
+    "event_p99_ms": 9.32,
+    "read_p50_ms": 0.205,
+    "used_memory_mb": 7012.4
+   },
+   {
+    "tenants": 1700,
+    "graphs": 10200,
+    "event_p50_ms": 2.9,
+    "event_p99_ms": 9.01,
+    "read_p50_ms": 0.211,
+    "used_memory_mb": 7800.9
+   }
+  ],
+  "total_s": 26.4
+ }
+}

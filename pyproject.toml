@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "secondorder"
+version = "0.1.0"
+description = "Theory-of-mind memory for AI agents on FalkorDB: what each agent believes, and what it thinks others believe."
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.12"
+dependencies = ["falkordb>=1.8", "falkordblite>=0.10", "redis>=6"]
+
+[project.optional-dependencies]
+llm = ["anthropic>=1.15"]
+mcp = ["mcp>=2"]
+server = ["fastapi>=0.144", "uvicorn[standard]>=0.30", "pydantic>=2", "anthropic>=1.15"]
+
+[tool.setuptools]
+packages = ["secondorder"]

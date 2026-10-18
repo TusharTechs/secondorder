@@ -153,6 +153,19 @@ tailwind.config = { theme: { extend: {
       </div>
       <div id="ev-out" class="text-xs mt-3"></div>
     </div>
+    <div class="col-span-12 card p-5">
+      <h3 class="font-display font-semibold mb-1">⑦ Ask about any mind</h3>
+      <p class="text-xs text-slate-500 mb-3">Claude only maps your words to a perspective chain and an entity. The answer comes from one fixed Cypher read over FalkorDB, with the evidence. If it's not in the graph, it says so.</p>
+      <div class="flex gap-2 flex-wrap"><input id="ask-q" class="flex-1 min-w-[300px] rounded-lg px-3 py-1.5 text-sm" placeholder="What does Escalation think Maya believes about the refund?" />
+        <button onclick="askMind()" id="ask-btn" class="btn px-4 py-1.5 rounded-lg text-sm text-white">Ask</button></div>
+      <div class="flex gap-2 mt-2 flex-wrap text-xs">
+        <button class="chip border border-falkor-line hover:border-falkor" onclick="askQ('What does Escalation think Maya believes about the refund?')">Escalation → Maya → refund</button>
+        <button class="chip border border-falkor-line hover:border-falkor" onclick="askQ('Does Billing know a replacement was approved?')">Does Billing know about the replacement?</button>
+        <button class="chip border border-falkor-line hover:border-falkor" onclick="askQ('What does Maya think Billing believes about her refund?')">Maya → Billing → refund</button>
+        <button class="chip border border-falkor-line hover:border-falkor" onclick="askQ('What is the weather in Paris?')">Something not in the graph</button>
+      </div>
+      <div id="ask-out" class="text-sm mt-3"></div>
+    </div>
   </div>
 </section>
 
@@ -405,6 +418,17 @@ async function runAgents() {
 }
 async function approve() { const st = await post(`/api/support/approve`, {agent: "Shipping", customer: "Maya", draft: LAST.secondorder.draft}); CHANGED = new Set(); await loadSupport(st); refreshTheater(); }
 
+function askQ(t) { $("#ask-q").value = t; askMind(); }
+async function askMind() {
+  const q = $("#ask-q").value.trim(); if (!q) return;
+  $("#ask-btn").disabled = true; $("#ask-btn").textContent = "…";
+  try {
+    const r = await post(`/api/support/ask`, {question: q});
+    $("#ask-out").innerHTML = `<div class="fade"><div class="text-base ${r.answerable ? (r.belief === r.truth || r.belief == null ? 'text-white' : 'wrong') : 'text-slate-400'}">${tagAll(r.answer)}</div>
+      ${r.answerable ? `<div class="text-xs text-slate-500 font-mono mt-1">chain = [${r.parsed.chain.join(", ")}] · entity = ${r.parsed.entity}</div>` + (r.steps || []).map(x => `<div class="text-xs text-slate-400 mt-1">• ${tagAll(x)}</div>`).join("") : ""}</div>`;
+  } catch (e) { $("#ask-out").innerHTML = `<div class="wrong">${e}</div>`; }
+  $("#ask-btn").disabled = false; $("#ask-btn").textContent = "Ask";
+}
 function ev(t) { $("#ev-text").value = t; composeEvent(); }
 async function composeEvent() {
   const t = $("#ev-text").value.trim(); if (!t) return;

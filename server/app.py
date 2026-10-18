@@ -333,6 +333,45 @@ def replay(sid: str, entity: str = ""):
             "truth_now": truth_now, "frames": frames}
 
 
+class AskReq(BaseModel):
+    question: str = Field(..., max_length=300)
+
+
+ASK_SCHEMA = {"type": "json_schema", "schema": {"type": "object", "properties": {
+    "chain": {"type": "array", "items": {"type": "string"}}, "entity": {"type": "string"}, "answerable": {"type": "boolean"}},
+    "required": ["chain", "entity", "answerable"], "additionalProperties": False}}
+
+
+@app.post("/api/{sid}/ask")
+def ask(sid: str, req: AskReq):
+    """Natural-language question -> (perspective chain, entity) via Claude -> answered by a fixed Cypher read + explanation.
+    The LLM never sees the graph contents and never writes Cypher; it only maps words to a chain and an entity."""
+    import asyncio
+
+    from secondorder import llm
+
+    sc = _ensure(sid)
+    if not LLM_ENABLED:
+        raise HTTPException(503, "Set ANTHROPIC_API_KEY to ask in natural language")
+    system = (f"Map the question to a belief lookup. People: {', '.join(sc.agents)}. Entities: {', '.join(sc.entities())}.\n"
+              "chain = the nested perspective, outermost first: 'What does A think B believes about X' -> [A, B]; "
+              "'What does A believe about X' -> [A]; 'What is X really' -> []. entity = the best matching entity name. "
+              "answerable=false if no entity or person matches.")
+    text, _ = asyncio.run(llm.ask(llm.OPUS, req.question, system=system, effort="low", fmt=ASK_SCHEMA))
+    q = json.loads(text)
+    if not q.get("answerable") or q["entity"] not in sc.entities() or any(a not in sc.agents for a in q["chain"]):
+        return {"answerable": False, "parsed": q, "answer": "That isn't in the graph: no matching person or fact."}
+    b = tools.believes(sid, q["chain"], q["entity"])
+    ex = tools.explain(sid, q["chain"], q["entity"]) if q["chain"] else {"steps": []}
+    who = " thinks ".join(q["chain"])
+    head = f"{who} believes" if len(q["chain"]) <= 1 else f"{' thinks '.join(q['chain'][:-1])} thinks {q['chain'][-1]} believes"
+    answer = (f"In reality, {q['entity']} = {b['truth']}." if not q["chain"] else
+              f"{head} {q['entity']} = {b['belief'] or 'nothing (never heard)'}" +
+              ("" if b["belief"] is None else (" ✓ (matches the world)" if b["correct"] else f" ✗ (the world says {b['truth']})")))
+    return {"answerable": True, "parsed": q, "answer": answer, "belief": b["belief"], "truth": b["truth"],
+            "steps": ex["steps"], "cypher": "resolve: MATCH (p:Perspective) WHERE p.chain IN $prefixes ... -[:INHERITS*0..6]->(q)-[b:BELIEVES {entity:$entity, active:true}]->(v)"}
+
+
 @app.get("/api/scale")
 def scale():
     p = os.path.join(RESULTS, "scale.json")

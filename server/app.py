@@ -294,12 +294,26 @@ def compose_event(sid: str, req: EventReq):
     return {"events": applied, "changed": changed, **_snapshot(sid)}
 
 
+_REPLAY_CACHE: dict = {}
+
+
 @app.get("/api/{sid}/replay")
 def replay(sid: str, entity: str = ""):
     """Everything the Mind Theater needs: per step, who is where, who witnessed it, and every agent's belief
-    and second-order beliefs about `entity` at that step (time travel via resolve_at)."""
+    and second-order beliefs about `entity` at that step (time travel via resolve_at). Cached per scenario version."""
     sc = _ensure(sid)
     entity = entity or (sc.entities() or [""])[0]
+    key = (sid, entity, sc.seq)
+    if key in _REPLAY_CACHE:
+        return _REPLAY_CACHE[key]
+    out = _replay(sc, sid, entity)
+    if len(_REPLAY_CACHE) > 64:
+        _REPLAY_CACHE.clear()
+    _REPLAY_CACHE[key] = out
+    return out
+
+
+def _replay(sc, sid: str, entity: str):
     truth_now = sc.truth(entity)
     where = {a: None for a in sc.agents}
     frames = []

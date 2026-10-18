@@ -469,6 +469,7 @@ secondorder/
 | `FALKORDB_LITE_PATH` | `data/secondorder.db` | File for the embedded FalkorDB |
 | `ANTHROPIC_API_KEY` | – | Enables live Claude agents, the event composer, Ask, and the LLM evals |
 | `SO_LIVE_AGENT_RUNS_PER_HOUR` | `1000` (`20` on Render) | Rate limit for live agent runs on a public deployment |
+| `SO_LIVE_LLM_CALLS_PER_HOUR` | `2000` (`120` on Render) | Rate limit for the event composer and Ask on a public deployment |
 | `SO_ACL_SECRET` | random per process | Secret used to derive per-agent ACL passwords |
 | `SO_AGENT` / `SO_SCENARIO` | – / `support` | MCP server: agent mode and scenario id |
 

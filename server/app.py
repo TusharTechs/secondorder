@@ -152,6 +152,17 @@ class AgentReq(BaseModel):
 CACHE_AGENT = os.path.join(RESULTS, "agent_demo_cache.json")
 _RUNS: list[float] = []
 MAX_RUNS = int(os.getenv("SO_LIVE_AGENT_RUNS_PER_HOUR", "1000"))
+_LLM_CALLS: list[float] = []
+MAX_LLM_CALLS = int(os.getenv("SO_LIVE_LLM_CALLS_PER_HOUR", "2000"))
+
+
+def _llm_budget():
+    """Hourly cap for public deployments (event composer + ask)."""
+    now = time.time()
+    _LLM_CALLS[:] = [t for t in _LLM_CALLS if now - t < 3600]
+    if len(_LLM_CALLS) >= MAX_LLM_CALLS:
+        raise HTTPException(429, "Live Claude features are rate-limited on this public demo. Try again later or run locally.")
+    _LLM_CALLS.append(now)
 
 
 @app.post("/api/{sid}/agent")
@@ -252,6 +263,7 @@ def compose_event(sid: str, req: EventReq):
     sc = _ensure(sid)
     if not LLM_ENABLED:
         raise HTTPException(503, "Set ANTHROPIC_API_KEY to use the live composer")
+    _llm_budget()
     rooms = sorted({e["room"] for e in sc.timeline() if e.get("room")})
     facts = {e: sc.truth(e) for e in sc.entities()}
     text, _ = asyncio.run(llm.ask(llm.OPUS, req.text, effort="low", fmt=COMPOSER_SCHEMA, system=COMPOSER_SYSTEM.format(
@@ -367,6 +379,7 @@ def ask(sid: str, req: AskReq):
     sc = _ensure(sid)
     if not LLM_ENABLED:
         raise HTTPException(503, "Set ANTHROPIC_API_KEY to ask in natural language")
+    _llm_budget()
     system = (f"Map the question to a belief lookup. People: {', '.join(sc.agents)}. Entities: {', '.join(sc.entities())}.\n"
               "chain = the nested perspective, outermost first: 'What does A think B believes about X' -> [A, B]; "
               "'What does A believe about X' -> [A]; 'What is X really' -> []. entity = the best matching entity name. "

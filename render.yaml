@@ -11,3 +11,5 @@ services:
         value: "20"
       - key: SO_ACL_SECRET
         generateValue: true
+      - key: SO_LIVE_LLM_CALLS_PER_HOUR
+        value: "120"

@@ -245,6 +245,10 @@ flowchart LR
 - **Nothing is deleted.** Superseded beliefs get `active:false, until:t`, so time travel is a query (`resolve_at`).
 - **`GRAPH.COPY` for what-ifs.** `plan_announcements` forks every graph of a scenario, simulates each plan, and measures the false beliefs left over.
 
+![A SecondOrder mind graph in FalkorDB Browser](docs/img/falkordb_browser.png)
+*`so:support:mind:Shipping` opened in the official FalkorDB Browser (`docker compose up`, then http://localhost:3000): Perspective nodes,
+`INHERITS` edges between nested perspectives, and `BELIEVES` edges to values.*
+
 **All 26 Cypher queries** the product runs are listed with explanations in [`docs/CYPHER.md`](docs/CYPHER.md). FalkorDB features used:
 - multigraph (one graph per agent plus a world graph);
 - ACL key patterns and `GRAPH.RO_QUERY`;

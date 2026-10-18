@@ -33,7 +33,7 @@
 | 🏆 Hackathon | https://www.wemakedevs.org/hackathons/falkordb |
 
 ## Contents
-[Why](#why) · [Headline results](#headline-results) · [What it does](#what-it-does) · [Architecture](#architecture) · [Getting started](#getting-started-windows-macos-linux)
+[Why](#why) · [Headline results](#headline-results) · [🗺️ Map of the graph](#map-of-the-graph) · [🛡️ The graph does the work](#the-graph-does-the-work) · [What it does](#what-it-does) · [Architecture](#architecture) · [Getting started](#getting-started-windows-macos-linux)
 · [Use it in your agents](#use-it-in-your-agents) · [HTTP API](#http-api) · [Results in detail](#results-in-detail) · [Project structure](#project-structure)
 · [Configuration](#configuration) · [Troubleshooting](#troubleshooting) · [For the FalkorDB team](#for-the-falkordb-team-integration-paths-and-findings) · [Prior art](#prior-art-and-whats-new) · [Limits](#honest-limits)
 
@@ -74,6 +74,67 @@ moons are what it thinks each other agent believes (green = true, red = false). 
 | Announcements | 4 private DMs leave **28** wrong beliefs about each other; 1 announcement leaves **0** (simulated on `GRAPH.COPY` forks) |
 
 ---
+
+<a id="map-of-the-graph"></a>
+## 🗺️ Map of the graph
+
+SecondOrder uses **one FalkorDB instance with many graphs**: one **world graph** per scenario, plus **one mind graph per agent**.
+
+```mermaid
+flowchart LR
+  subgraph WORLD["so:sid:world · what happened, and who saw it"]
+    A1((Agent)) -->|WITNESSED| EV[Event<br/>seq · kind · text · room]
+    A1 -->|PERFORMED| EV
+    EV -->|ABOUT| EN[Entity<br/>refund_4411]
+    EN -->|IS t| V1[Value<br/>rejected]
+    V1 -->|LOCATED_IN| R1[Room]
+    A1 -->|IN since / EXITED t| R1
+    A1 -->|TOLD t · public · trusted| A2((Agent))
+  end
+  subgraph MIND["so:sid:mind:Shipping · everything Shipping believes"]
+    P1["Perspective<br/>chain: Shipping"]
+    P2["Perspective<br/>chain: Shipping>Maya"] -->|INHERITS| P1
+    P3["Perspective<br/>chain: Shipping>Maya>Billing"] -->|INHERITS| P2
+    P1 -->|BELIEVES entity · active · t · until · via · src| V2[Value<br/>rejected]
+    P2 -->|BELIEVES| V3[Value<br/>approved]
+  end
+  EV -. perception routing:<br/>only witnesses' perspectives change .-> MIND
+```
+
+| Graph | Node labels | Relationship types | What it's for | In the support demo |
+|---|---|---|---|---|
+| `so:<sid>:world` (1 per scenario) | `Agent`, `Event`, `Entity`, `Value`, `Room`, `Meta` | `WITNESSED`, `PERFORMED`, `ABOUT`, `IS`, `IN`, `EXITED`, `TOLD`, `LOCATED_IN` | Ground truth, and **who perceived each event** | 36 events · 92 `WITNESSED` · 34 `PERFORMED` |
+| `so:<sid>:mind:<agent>` (1 per agent) | `Perspective {chain, depth}`, `Value` | `INHERITS` (child → parent perspective), `BELIEVES {entity, active, t, until, via, src}` | What this agent believes, and what it thinks others believe, nested up to depth 4 | Shipping: 11 perspectives · 10 `INHERITS` · 20 `BELIEVES` |
+
+- **Access:** each mind graph has its own ACL user (`agent_<name>`) limited to `GRAPH.RO_QUERY` on `~so:*:mind:<name>`.
+- **Indexing:** each mind graph has a range index on `Perspective(chain)`.
+- **Queries:** every query is listed in [`docs/CYPHER.md`](docs/CYPHER.md), and you can see the graphs live in FalkorDB Browser (screenshot [below](#graph-data-model)).
+
+<a id="the-graph-does-the-work"></a>
+## 🛡️ The graph does the work
+
+Every SecondOrder feature is a graph operation. There is no other datastore: no SQL, no vector index, no in-memory belief cache. **Take FalkorDB
+out and nothing works.** The engine raises on start, and every tool, agent answer, theater frame and benchmark answer comes from a Cypher query.
+
+| Capability | What the graph does (in FalkorDB) | Why it needs the graph |
+|---|---|---|
+| Who saw what | `MATCH (a:Agent)-[:IN]->(:Room {name:$room})` at event time + `CREATE (a)-[:WITNESSED]->(ev)` | Perception is a relationship between agents, rooms and events |
+| Nested beliefs ("A thinks B thinks C believes…") | One variable-length walk: `(p)-[:INHERITS*0..6]->(q)-[:BELIEVES {entity, active:true}]->(v)` | Beliefs are inherited down a perspective tree; only divergences are stored (copy-on-write) |
+| Updating minds | Cypher `UNWIND` writes into every perspective made only of witnesses; non-witness children are frozen first | The routing rule is graph-shaped: which chains are fully contained in the witness set |
+| Stale-belief detection + "what did they miss?" | `MATCH (ev)-[:ABOUT]->(:Entity) WHERE NOT (:Agent {name:$a})-[:WITNESSED]->(ev)` | The missing edge *is* the explanation |
+| Trust (Hi-ToM rule) | Predicate over `EXITED {t}` edges: believe a speaker who left the room after you | Exit order is a property of agent–room relationships |
+| Explanations | Source event + witnesses + inheritance hops; who-told-whom path via `algo.SPpaths` over `TOLD` | Answers come with their path |
+| Time travel (Mind Theater) | `BELIEVES` edges are closed (`until`), never deleted; `resolve_at` filters by `t` | History lives on the edges |
+| Private minds | FalkorDB ACL key pattern per agent + `GRAPH.RO_QUERY` | The multigraph boundary *is* the privacy boundary: reading another mind returns `NOPERM` |
+| What-if planning | `GRAPH.COPY` every graph of the scenario, simulate plans, count remaining false beliefs (28 vs 0) | Forking whole minds is one command per graph |
+
+**Evidence that the structure, not the LLM, does the reasoning:**
+- On Hi-ToM, **taking the nesting out of the graph** (per-agent memory without perspectives) drops accuracy from **100% to 68.3%**. A flat fact
+  memory (which even knows the truth) drops to **50%**. Claude Opus 5.5 reading the whole story itself reaches 91%.
+- Answering any nested-belief question costs **0 LLM tokens** once the graph is built: it's one Cypher read. The LLM is used only to turn text
+  into events (where it matches a deterministic parser exactly) and to phrase replies.
+- In the agent task, the agent's context comes from its own mind graph (`context_for`): **20/20 corrections at a constant ~1.7k tokens**, against
+  1/20 for a flat memory with the same facts.
 
 ## What it does
 

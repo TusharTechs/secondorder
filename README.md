@@ -18,7 +18,7 @@
 | What | Link |
 |---|---|
 | 🌐 Live demo | Shared with the judges in the hackathon submission (it runs on a private, rate-limited API key). Run your own in one click: [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/TusharTechs/secondorder) or [locally](#getting-started-windows-macos-linux) |
-| 🎬 Demo video (4:25, narrated + captioned) | [`docs/video/demo.mp4`](docs/video/demo.mp4) |
+| 🎬 Demo video (4:25, narrated + captioned) | **[YouTube](https://youtu.be/wtpFoq5Ifgo)** · or the file [`docs/video/demo.mp4`](docs/video/demo.mp4) |
 | 💻 Source code | https://github.com/TusharTechs/secondorder |
 | 🧾 Every Cypher query the product runs | [`docs/CYPHER.md`](docs/CYPHER.md) |
 | 📊 Benchmark results table | [`eval/results/RESULTS.md`](eval/results/RESULTS.md) |
@@ -51,7 +51,8 @@ knows who is out of date, who has a wrong model of whom, and the smallest messag
 user and can read **only its own mind**: theory of mind, not omniscience.
 
 
-![SecondOrder](docs/img/hero.png)
+[![Watch the demo (4:25)](docs/img/hero.png)](https://youtu.be/wtpFoq5Ifgo)
+*▶ Click to watch the narrated demo on YouTube.*
 
 ![The Mind Theater](docs/img/theater.png)
 *The Mind Theater, replayed from FalkorDB with time-travel queries. Orbs are agents in their channels. Each orb's ring is its own belief, and its

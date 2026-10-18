@@ -167,7 +167,8 @@ def run_agent(sid: str, req: AgentReq):
         raise HTTPException(503, "LLM disabled")
     _RUNS.append(now)
     with concurrent.futures.ThreadPoolExecutor(2) as ex:
-        futs = {m: ex.submit(agent.run, sid, req.agent, req.customer, req.message, m) for m in ("flat", "secondorder")}
+        futs = {"flat": ex.submit(agent.run, sid, req.agent, req.customer, req.message, "flat"),
+                "secondorder": ex.submit(agent.run, sid, req.agent, req.customer, req.message, "hybrid")}
         out = {m: f.result() for m, f in futs.items()}
     if os.getenv("SO_RECORD_AGENT_CACHE") == "1":  # only when deliberately recording the replay
         os.makedirs(RESULTS, exist_ok=True)

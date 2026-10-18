@@ -101,6 +101,20 @@ summary["side_html"] = (
     f"<div><div class='text-xl font-bold'>6 graphs</div><div class='text-xs text-slate-400'>per story: 1 world graph + 1 mind graph per agent, nested perspectives inside</div></div>"
     f"<div><div class='text-xl font-bold'>~1.5 ms</div><div class='text-xs text-slate-400'>median time to route one event into every affected mind (embedded FalkorDB)</div></div>"
     f"<div><div class='text-xl font-bold'>0 tokens</div><div class='text-xs text-slate-400'>to answer a nested-belief question once memory is built (a Cypher read) vs. ~{summary['side']['opus_avg_output_tokens']} output tokens per question for Opus 5.5 reasoning from the transcript</div></div></div>")
+# agent-task eval (eval/run_agents.py)
+ae = []
+for fname, label in (("agent_eval.json", "short channel history"), ("agent_eval_long.json", "8x longer channel history")):
+    d = load(fname)
+    if not d:
+        continue
+    for arm in ("flat", "transcript", "secondorder", "context"):
+        rs = [r for r in d["rows"] if r["arm"] == arm]
+        if not rs:
+            continue
+        tok = [r["input_tokens"] for r in rs if r.get("input_tokens")]
+        ae.append({"history": label, "arm": arm, "n": len(rs), "corrects": sum(r["corrects"] for r in rs),
+                   "contradicts": sum(r["contradicts_truth"] for r in rs), "avg_input_tokens": round(sum(tok) / max(1, len(tok)))})
+summary["agent_eval"] = ae
 json.dump(summary, open(os.path.join(R, "summary.json"), "w"), indent=1)
 
 # label audit file

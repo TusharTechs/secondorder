@@ -186,6 +186,9 @@ tailwind.config = { theme: { extend: {
       <canvas id="bench-chart" height="140"></canvas></div>
     <div class="col-span-12 lg:col-span-4 card p-5 text-sm" id="bench-side"></div>
     <div class="col-span-12 card p-5 text-sm overflow-x-auto" id="bench-table"></div>
+    <div class="col-span-12 card p-5 text-sm"><h3 class="font-display font-semibold mb-1">Agent task: does the agent correct a customer's stale belief it never saw being formed?</h3>
+      <p class="text-xs text-slate-500 mb-3">20 synthetic support cases × 4 agents (all Claude Opus 5.5), judged by Claude. The customer's message never restates the old information. <b>flat</b> = own facts after the handoff · <b>transcript</b> = plus the full channel history · <b>SecondOrder tools</b> = ToM tools over its own mind graph · <b>SecondOrder context</b> = <span class="font-mono">context_for()</span> injected into the prompt, read only from its own mind.</p>
+      <div id="agent-eval" class="overflow-x-auto"></div></div>
     <div class="col-span-12 lg:col-span-6 card p-5"><h3 class="font-display font-semibold mb-1">Multi-tenant scale: one FalkorDB, 10,200 graphs</h3>
       <p class="text-xs text-slate-500 mb-2">1,700 isolated scenarios (1 world + 5 mind graphs each). Event-routing latency stays flat as graphs are added.</p><canvas id="scale-chart" height="170"></canvas></div>
     <div class="col-span-12 lg:col-span-6 card p-5 text-sm"><h3 class="font-display font-semibold mb-1">Agents × depth, index on/off</h3>
@@ -462,6 +465,13 @@ async function loadBench() {
     CH = new Chart($("#bench-chart"), {type: "bar", data: {labels: s.orders.map(o => `order ${o}`), datasets: s.series.map((x, i) => ({label: x.name, data: x.acc, backgroundColor: ["#7466FF", "#C15CFF", "#FF5454", "#FF804D", "#4b5563", "#6b7280"][i] || x.color, borderRadius: 4}))},
       options: {scales: {y: {min: 0, max: 100, ticks: {color: "#9CA3AF"}, grid: {color: "#26263A"}}, x: {ticks: {color: "#9CA3AF"}, grid: {display: false}}}, plugins: {legend: {labels: {color: "#cbd5e1", font: {family: "Inter"}}}}}});
     $("#bench-side").innerHTML = s.side_html || ""; $("#bench-table").innerHTML = s.table_html || "";
+    if (s.agent_eval && s.agent_eval.length) {
+      const names = {flat: "flat memory", transcript: "transcript handoff", secondorder: "SecondOrder tools", context: "SecondOrder context"};
+      const hs = [...new Set(s.agent_eval.map(r => r.history))];
+      $("#agent-eval").innerHTML = `<table class="text-xs w-full"><tr class="text-slate-400 text-left"><th>history</th><th>agent</th><th>corrects the customer</th><th>asserts the outdated fact</th><th>avg input tokens</th><th></th></tr>` +
+        s.agent_eval.map(r => `<tr><td class="text-slate-500">${r.history}</td><td class="${r.arm === 'context' ? 'text-falkor font-semibold' : ''}">${names[r.arm]}</td><td class="font-mono"><b>${r.corrects}/${r.n}</b></td><td class="font-mono">${r.contradicts}/${r.n}</td><td class="font-mono">${r.avg_input_tokens.toLocaleString()}</td>
+          <td style="width:30%"><div class="h-2 rounded" style="width:${100 * r.corrects / r.n}%;background:${r.arm === 'context' || r.arm === 'secondorder' ? 'linear-gradient(90deg,#7466FF,#C15CFF)' : '#4b5563'}"></div></td></tr>`).join("") + `</table>`;
+    }
   }
   const sc = await api("/api/scale");
   if (sc.multitenant) {

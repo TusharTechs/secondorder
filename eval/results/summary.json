@@ -156,5 +156,71 @@
  },
  "table_md": "| Method | n | vs released labels | order 0 | 1 | 2 | 3 | 4 | n | vs Hi-ToM reference oracle | 0 | 1 | 2 | 3 | 4 |\n|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|\n| SecondOrder (FalkorDB) | 1200 | **87.8** | 100.0 | 100.0 | 85.4 | 79.2 | 74.2 | 1200 | **100.0** | 100.0 | 100.0 | 100.0 | 100.0 | 100.0 |\n| SecondOrder + Claude event extraction | 1200 | **87.8** | 100.0 | 100.0 | 85.4 | 79.2 | 74.2 | 1200 | **100.0** | 100.0 | 100.0 | 100.0 | 100.0 | 100.0 |\n| Claude Opus 5.5 alone | 1200 | **80.4** | 100.0 | 95.0 | 70.8 | 70.0 | 66.2 | 1200 | **91.0** | 100.0 | 95.0 | 82.9 | 86.2 | 90.8 |\n| Claude Haiku 5.5 alone | 1200 | **78.4** | 100.0 | 90.0 | 72.1 | 68.8 | 61.2 | 1200 | **86.5** | 100.0 | 90.0 | 82.5 | 80.8 | 79.2 |\n| Flat memory (latest fact) | 1200 | **53.1** | 100.0 | 55.0 | 32.9 | 38.3 | 39.2 | 1200 | **50.0** | 100.0 | 55.0 | 30.8 | 34.2 | 30.0 |\n| Per-agent memory, no nesting | 1200 | **65.4** | 100.0 | 100.0 | 49.6 | 43.8 | 33.8 | 1200 | **68.3** | 100.0 | 100.0 | 58.3 | 48.3 | 35.0 |",
  "table_html": "<table class='text-xs mono w-full'><tr class='text-slate-400'><th class='text-left'>method</th><th>n</th><th>vs released labels</th><th>o0</th><th>o1</th><th>o2</th><th>o3</th><th>o4</th><th>vs reference oracle</th><th>o0</th><th>o1</th><th>o2</th><th>o3</th><th>o4</th></tr><tr><td>SecondOrder (FalkorDB)</td><td>1200</td><td><b>87.8</b></td><td>100.0</td><td>100.0</td><td>85.4</td><td>79.2</td><td>74.2</td><td><b>100.0</b></td><td>100.0</td><td>100.0</td><td>100.0</td><td>100.0</td><td>100.0</td></tr><tr><td>SecondOrder + Claude event extraction</td><td>1200</td><td><b>87.8</b></td><td>100.0</td><td>100.0</td><td>85.4</td><td>79.2</td><td>74.2</td><td><b>100.0</b></td><td>100.0</td><td>100.0</td><td>100.0</td><td>100.0</td><td>100.0</td></tr><tr><td>Claude Opus 5.5 alone</td><td>1200</td><td><b>80.4</b></td><td>100.0</td><td>95.0</td><td>70.8</td><td>70.0</td><td>66.2</td><td><b>91.0</b></td><td>100.0</td><td>95.0</td><td>82.9</td><td>86.2</td><td>90.8</td></tr><tr><td>Claude Haiku 5.5 alone</td><td>1200</td><td><b>78.4</b></td><td>100.0</td><td>90.0</td><td>72.1</td><td>68.8</td><td>61.2</td><td><b>86.5</b></td><td>100.0</td><td>90.0</td><td>82.5</td><td>80.8</td><td>79.2</td></tr><tr><td>Flat memory (latest fact)</td><td>1200</td><td><b>53.1</b></td><td>100.0</td><td>55.0</td><td>32.9</td><td>38.3</td><td>39.2</td><td><b>50.0</b></td><td>100.0</td><td>55.0</td><td>30.8</td><td>34.2</td><td>30.0</td></tr><tr><td>Per-agent memory, no nesting</td><td>1200</td><td><b>65.4</b></td><td>100.0</td><td>100.0</td><td>49.6</td><td>43.8</td><td>33.8</td><td><b>68.3</b></td><td>100.0</td><td>100.0</td><td>58.3</td><td>48.3</td><td>35.0</td></tr></table><p class='text-xs text-slate-400 mt-2'>Every method is scored on all 1,200 questions twice: against the released JSON labels, and against Hi-ToM's own published Oracle code replayed on each story (unmodified, third_party/hitom). The two disagree on 147 questions. The chart shows accuracy vs. the reference oracle. See eval/results/LABEL_ERRORS.md.</p>",
- "side_html": "<div class='space-y-3'><div><div class='text-3xl font-bold text-sky-300'>87.8%</div><div class='text-xs text-slate-400'>SecondOrder vs. the released labels</div></div><div><div class='text-3xl font-bold text-sky-300'>100.0%</div><div class='text-xs text-slate-400'>SecondOrder vs. Hi-ToM's own reference Oracle code (1200 questions, none excluded)</div></div><div><div class='text-xl font-bold'>100 vs 89 / 100</div><div class='text-xs text-slate-400'>free natural prose (Claude-paraphrased stories, reference labels): SecondOrder + Claude extraction vs. Claude Opus 5.5 alone</div></div><div><div class='text-xl font-bold'>6 graphs</div><div class='text-xs text-slate-400'>per story: 1 world graph + 1 mind graph per agent, nested perspectives inside</div></div><div><div class='text-xl font-bold'>~1.5 ms</div><div class='text-xs text-slate-400'>median time to route one event into every affected mind (embedded FalkorDB)</div></div><div><div class='text-xl font-bold'>0 tokens</div><div class='text-xs text-slate-400'>to answer a nested-belief question once memory is built (a Cypher read) vs. ~481 output tokens per question for Opus 5.5 reasoning from the transcript</div></div></div>"
+ "side_html": "<div class='space-y-3'><div><div class='text-3xl font-bold text-sky-300'>87.8%</div><div class='text-xs text-slate-400'>SecondOrder vs. the released labels</div></div><div><div class='text-3xl font-bold text-sky-300'>100.0%</div><div class='text-xs text-slate-400'>SecondOrder vs. Hi-ToM's own reference Oracle code (1200 questions, none excluded)</div></div><div><div class='text-xl font-bold'>100 vs 89 / 100</div><div class='text-xs text-slate-400'>free natural prose (Claude-paraphrased stories, reference labels): SecondOrder + Claude extraction vs. Claude Opus 5.5 alone</div></div><div><div class='text-xl font-bold'>6 graphs</div><div class='text-xs text-slate-400'>per story: 1 world graph + 1 mind graph per agent, nested perspectives inside</div></div><div><div class='text-xl font-bold'>~1.5 ms</div><div class='text-xs text-slate-400'>median time to route one event into every affected mind (embedded FalkorDB)</div></div><div><div class='text-xl font-bold'>0 tokens</div><div class='text-xs text-slate-400'>to answer a nested-belief question once memory is built (a Cypher read) vs. ~481 output tokens per question for Opus 5.5 reasoning from the transcript</div></div></div>",
+ "agent_eval": [
+  {
+   "history": "short channel history",
+   "arm": "flat",
+   "n": 20,
+   "corrects": 1,
+   "contradicts": 0,
+   "avg_input_tokens": 1514
+  },
+  {
+   "history": "short channel history",
+   "arm": "transcript",
+   "n": 20,
+   "corrects": 20,
+   "contradicts": 0,
+   "avg_input_tokens": 2628
+  },
+  {
+   "history": "short channel history",
+   "arm": "secondorder",
+   "n": 20,
+   "corrects": 19,
+   "contradicts": 0,
+   "avg_input_tokens": 2095
+  },
+  {
+   "history": "short channel history",
+   "arm": "context",
+   "n": 20,
+   "corrects": 20,
+   "contradicts": 0,
+   "avg_input_tokens": 1723
+  },
+  {
+   "history": "8x longer channel history",
+   "arm": "flat",
+   "n": 20,
+   "corrects": 1,
+   "contradicts": 0,
+   "avg_input_tokens": 1514
+  },
+  {
+   "history": "8x longer channel history",
+   "arm": "transcript",
+   "n": 20,
+   "corrects": 20,
+   "contradicts": 0,
+   "avg_input_tokens": 8218
+  },
+  {
+   "history": "8x longer channel history",
+   "arm": "secondorder",
+   "n": 20,
+   "corrects": 20,
+   "contradicts": 0,
+   "avg_input_tokens": 2095
+  },
+  {
+   "history": "8x longer channel history",
+   "arm": "context",
+   "n": 20,
+   "corrects": 20,
+   "contradicts": 0,
+   "avg_input_tokens": 1723
+  }
+ ]
 }

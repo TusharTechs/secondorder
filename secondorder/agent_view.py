@@ -52,7 +52,7 @@ def _ro(agent: str, key: str, query: str, params: dict):
             return "[" + ", ".join(lit(x) for x in v) + "]"
         if isinstance(v, (int, float)):
             return str(v)
-        return json.dumps(str(v))
+        return json.dumps(str(v), ensure_ascii=False)
 
     header = "CYPHER " + " ".join(f"{k}={lit(v)}" for k, v in params.items()) + " " if params else ""
     res = _agent_conn(agent).execute_command("GRAPH.RO_QUERY", key, header + query)

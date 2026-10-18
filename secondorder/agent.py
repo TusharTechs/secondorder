@@ -54,7 +54,9 @@ def _facts(view: AgentView):
 def run(sid: str, me: str, customer: str, incoming: str, mode: str = "secondorder", model: str = OPUS,
         system_extra: str = "") -> dict:
     view = AgentView(sid, me)
-    tools = TOOLS_COMMON + (TOOLS_TOM if mode == "secondorder" else [])
+    tools = TOOLS_COMMON + (TOOLS_TOM if mode in ("secondorder", "hybrid") else [])
+    if mode == "hybrid":  # recommended: inject the ToM context AND expose the tools
+        system_extra = system_extra + "\n\n" + context_block(sid, me, customer)
     client = anthropic.Anthropic(max_retries=4)
     messages = [{"role": "user", "content": f"New message from {customer}: \"{incoming}\""}]
     trace, draft, in_tokens = [], None, 0
@@ -104,3 +106,23 @@ def commit_reply(sid: str, me: str, customer: str, room: str, draft: dict):
         sc.say(me, room, f["entity"], f["value"], text=f"{me}: {draft['message']}" if f is draft["facts"][0] else
                f"({me} also conveyed {f['entity']} = {f['value']})")
     return sc
+
+
+def context_block(sid: str, me: str, other: str) -> str:
+    """SecondOrder context read ONLY from the agent's own mind graph (ACL-scoped): what I believe, what I think
+    `other` believes, and where we differ. Inject it into the prompt (no tool call needed)."""
+    view = AgentView(sid, me)
+    lines = [f"[SecondOrder memory: what {me} knows, and what {me} believes {other} knows]"]
+    for e in view.entities():
+        mine, _ = view.resolve([me], e)
+        theirs, meta = view.resolve([me, other], e)
+        if mine is None:
+            continue
+        if theirs is None:
+            lines.append(f"- {e}: {mine!r}. {other} has not been told.")
+        elif theirs != mine:
+            lines.append(f"- {e}: {mine!r}. {other} still believes {theirs!r} (from {meta.get('from') or 'earlier'}): "
+                         f"correct this explicitly.")
+        else:
+            lines.append(f"- {e}: {mine!r} ({other} knows).")
+    return "\n".join(lines)

@@ -29,6 +29,8 @@ from secondorder.llm import OPUS  # noqa: E402
 from secondorder.scenarios import OPS_CHATTER, handoff  # noqa: E402
 
 OUT = os.path.join(os.path.dirname(__file__), "results", "agent_eval.json")
+ARMS = ("flat", "transcript", "secondorder", "context")
+CHATTER_X = 1
 
 CASES = [
     # (entity, told value, new value, extra entity, extra value, what the customer bought)
@@ -59,8 +61,9 @@ def build(i: int, rnd: random.Random) -> dict:
     sc.exit(cust)
     sc.exit("Billing")
     sc.enter(["Billing", "Finance", "Escalation"], "ops-internal")
-    chatter = rnd.sample(OPS_CHATTER, 12)
-    for who, msg in chatter[:6]:
+    pool = [(w, f"[{k}] {m}") for k in range(CHATTER_X) for w, m in OPS_CHATTER]
+    chatter = rnd.sample(pool, 12 * CHATTER_X)
+    for who, msg in chatter[:len(chatter) // 2]:
         sc.chatter("ops-internal", f"{who}: {msg}", actor=who)
     sc.report("Billing", "ops-internal", cust, e, told,
               text=f"Billing: FYI I told {cust} on #{oid} that the {ent.replace('_', ' ')} is {told}.")
@@ -69,7 +72,7 @@ def build(i: int, rnd: random.Random) -> dict:
     sc.exit("Billing")
     sc.say("Escalation", "ops-internal", x, extra_v, changes_world=True,
            text=f"Escalation: For #{oid} I've arranged {extra.replace('_', ' ')}: {extra_v}.")
-    for who, msg in chatter[6:]:
+    for who, msg in chatter[len(chatter) // 2:]:
         sc.chatter("ops-internal", f"{who}: {msg}", actor=who)
     sc.exit("Finance")
     sc.exit("Escalation")
@@ -99,7 +102,11 @@ def judge(client, case, reply):
 
 def run_arm(case, arm):
     mode = "secondorder" if arm == "secondorder" else "flat"
-    extra = f"\n\nHandoff transcript from Escalation (everything they saw):\n{case['transcript']}" if arm == "transcript" else ""
+    extra = ""
+    if arm == "transcript":
+        extra = f"\n\nHandoff transcript from Escalation (everything they saw):\n{case['transcript']}"
+    elif arm == "context":
+        extra = "\n\n" + agent.context_block(case["sid"], "Shipping", case["customer"])
     r = agent.run(case["sid"], "Shipping", case["customer"], case["message"], mode=mode, system_extra=extra)
     return r
 
@@ -107,11 +114,17 @@ def run_arm(case, arm):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--n", type=int, default=20)
+    ap.add_argument("--chatter", type=int, default=1, help="channel-history multiplier (12 lines x N)")
+    ap.add_argument("--out", default=None)
     a = ap.parse_args()
+    global CHATTER_X, OUT
+    CHATTER_X = a.chatter
+    if a.out:
+        OUT = os.path.join(os.path.dirname(__file__), "results", a.out)
     rnd = random.Random(3)
     cases = [build(i, rnd) for i in range(a.n)]
     client = anthropic.Anthropic(max_retries=4)
-    jobs = [(c, arm) for c in cases for arm in ("flat", "transcript", "secondorder")]
+    jobs = [(c, arm) for c in cases for arm in ARMS]
 
     def one(job):
         c, arm = job
@@ -125,7 +138,7 @@ def main():
         rows = list(ex.map(one, jobs))
     json.dump({"cases": [{k: v for k, v in c.items() if k != "transcript"} for c in cases], "rows": rows},
               open(OUT, "w"), indent=1)
-    for arm in ("flat", "transcript", "secondorder"):
+    for arm in ARMS:
         rs = [r for r in rows if r["arm"] == arm]
         tok = [r["input_tokens"] for r in rs if r["input_tokens"]]
         print(f"{arm:12s} corrects {sum(r['corrects'] for r in rs)}/{len(rs)}  contradicts {sum(r['contradicts_truth'] for r in rs)}/{len(rs)}"

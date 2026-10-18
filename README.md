@@ -36,6 +36,7 @@ moons are what it thinks each other agent believes (green = true, red = false). 
 | **Hi-ToM, 1,200 questions up to 4th-order belief** | **100%** vs. the benchmark's own reference oracle (Claude Opus 5.5 alone: 91.0%, Haiku 5.5: 86.5%, flat memory: 50.0%) |
 | …and vs. the released JSON labels | **87.8%** (Opus 80.4%, Haiku 78.4%). The 147 differences are questions where the released labels **contradict the benchmark's own published code** ([details](#a-finding-about-the-benchmark)) |
 | Free prose (no templates), 100 stories | **100/100** with Claude event extraction vs. **89/100** for Opus alone (reference labels; 93 vs 83 on released labels) |
+| **Agent task (20 cases, Claude judge)** | Correcting a customer's stale belief the agent never saw form: **SecondOrder 20/20 at 1,723 tokens** vs. flat memory **1/20**. A full transcript handoff also gets 20/20 but costs **8,218 tokens** with a longer channel history, and grows with it; SecondOrder's prompt doesn't |
 | Handoff context | **806 → 48 tokens**: only what the receiver lacks, including *"Maya still believes the refund is approved"* |
 | Multi-tenant scale | **10,200 graphs in one FalkorDB**: 2.9 ms p50 / 9 ms p99 per event, 0.21 ms nested read; flat as graphs are added |
 | Announcements | 4 private DMs leave **28** wrong beliefs about each other; 1 announcement leaves **0** (simulated on `GRAPH.COPY` forks) |
@@ -98,6 +99,27 @@ thinks the carrot is?"* Every method is scored on **all 1,200 questions** agains
   template parser exactly, so the score doesn't depend on the parser. On 100 stories Claude rewrote as varied natural prose: 100/100 vs. 89/100
   for Opus alone.
 - **Cost:** once memory is built, answering is a Cypher read (0 LLM tokens). Opus 5.5 spends about 480 output tokens per question re-reading the transcript.
+
+### Agent task: correcting what the customer was told
+[`eval/run_agents.py`](eval/run_agents.py) uses 20 synthetic support cases across 5 kinds of decision: refund, delivery date, discount, warranty, cancellation.
+In each case:
+- agent A tells the customer X in chat;
+- X changes to Y in an internal channel the customer never sees;
+- the case is handed off to agent B;
+- the customer's next message ("Any update?") never restates X.
+
+All agents are Claude Opus 5.5. A Claude judge checks whether the reply **explicitly corrects** the customer's outdated understanding.
+
+| Agent B's memory | corrects (short history) | input tokens | corrects (8× longer history) | input tokens |
+|---|---|---|---|---|
+| flat (own facts after handoff) | 1/20 | 1,514 | 1/20 | 1,514 |
+| full transcript handoff | 20/20 | 2,628 | 20/20 | **8,218** |
+| SecondOrder tools (`who_is_misinformed`, …) | 19/20 | 2,095 | 20/20 | 2,095 |
+| **SecondOrder context** (`context_for`, injected, read only from B's own mind) | **20/20** | **1,723** | **20/20** | **1,723** |
+
+None of the agents asserted the outdated fact. The point is cost: a transcript gets the same answer by re-reading everything, so its cost grows
+with history, while SecondOrder's context stays constant because the graph already knows *who believes what*. This eval also caught a real bug (Unicode names in
+ACL-scoped queries), now fixed and covered by a test.
 
 ### A finding about the benchmark
 We replayed every story through **Hi-ToM's own published belief-tracking code**: the authors' `Oracle` and action classes, vendored unmodified in

@@ -76,3 +76,15 @@ def test_announcement_creates_common_ground():
     assert p["plans"]["public_announcement"]["remaining_false_beliefs"] == 0
     assert p["plans"]["private_tells"]["remaining_false_beliefs"] > 0
     Scenario.load("t_org").delete()
+
+
+def test_acl_view_handles_unicode_names():
+    sc = fresh("t_uni", depth=2, trust="credulous")
+    sc._register("Tomás", "Zoë")
+    sc.enter(["Tomás", "Zoë"], "room")
+    sc.say("Zoë", "room", "plan", "A", changes_world=True)
+    sc.exit("Tomás")
+    sc.say("Zoë", "room", "plan", "B", changes_world=True)
+    v = AgentView("t_uni", "Zoë")
+    assert v.resolve(["Zoë", "Tomás"], "plan")[0] == "A"
+    sc.delete()

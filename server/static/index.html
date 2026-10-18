@@ -4,6 +4,12 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>SecondOrder · theory-of-mind memory for AI agents on FalkorDB</title>
+<meta name="description" content="Agent memory stores what is true. SecondOrder also stores what you know, and what you think I know: theory-of-mind memory for multi-agent systems, one FalkorDB graph per mind." />
+<meta property="og:title" content="SecondOrder: theory-of-mind memory for AI agents" />
+<meta property="og:description" content="One FalkorDB graph per mind. 100% on Hi-ToM vs the benchmark's own oracle, 20/20 agent corrections at constant context cost, 10k graphs in one instance." />
+<meta property="og:image" content="https://raw.githubusercontent.com/TusharTechs/secondorder/main/docs/img/theater.png" />
+<meta name="twitter:card" content="summary_large_image" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='1' x2='1' y2='0'%3E%3Cstop offset='0' stop-color='%23C15CFF'/%3E%3Cstop offset='1' stop-color='%23FF5454'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='20' cy='20' r='17' fill='none' stroke='url(%23g)' stroke-width='4'/%3E%3Ccircle cx='16' cy='22' r='8' fill='none' stroke='%237466FF' stroke-width='3'/%3E%3Ccircle cx='14' cy='24' r='3.5' fill='%237466FF'/%3E%3C/svg%3E" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
 <script src="https://cdn.tailwindcss.com"></script>
@@ -63,6 +69,9 @@ tailwind.config = { theme: { extend: {
   </nav>
 </header>
 
+<div id="drawer" class="fixed top-0 right-0 h-full w-[420px] max-w-[92vw] z-50 translate-x-full transition-transform duration-300" style="background:rgba(14,14,18,.97);border-left:1px solid #7466FF66;box-shadow:-20px 0 60px rgba(0,0,0,.5)">
+  <div class="p-5 h-full overflow-auto"><div class="flex justify-between items-center mb-3"><h3 class="font-display font-semibold text-lg" id="dr-title"></h3>
+  <button onclick="closeDrawer()" class="text-slate-400 hover:text-white text-xl">×</button></div><div id="dr-body" class="text-sm"></div></div></div>
 <main class="max-w-7xl mx-auto px-6 pb-20">
 <!-- ============================== SUPPORT ============================== -->
 <section id="tab-support">
@@ -76,9 +85,9 @@ tailwind.config = { theme: { extend: {
     <div class="flex items-center justify-between px-5 pt-4 flex-wrap gap-2">
       <div><h3 class="font-display font-semibold text-lg">The Mind Theater <span class="text-xs font-sans font-normal text-slate-500">replayed from FalkorDB with time-travel queries</span></h3>
         <p class="text-xs text-slate-500">Orbs are agents, moving between channels. Each orb's ring is its own belief about <b class="text-slate-300" id="th-ent-label">the refund</b>. The little moons are what it thinks <i>each other agent</i> believes.
-          <span class="right">green</span> = true, <span class="wrong">red</span> = false, dim = never heard. Events beam only to the agents who witnessed them.</p></div>
+          <span class="right">green</span> = true, <span class="wrong">red</span> = false, dim = never heard. Events beam only to the agents who witnessed them. <span class="text-slate-400">Click an orb to open its mind · space / ← → to control.</span></p></div>
       <div class="flex items-center gap-2 text-xs">
-        <div class="inline-flex rounded-lg border border-falkor-line overflow-hidden"><button id="ths-support" class="px-2 py-1 bg-falkor/30" onclick="thScenario('support')">support crew</button><button id="ths-sally" class="px-2 py-1" onclick="thScenario('sally')">Sally–Anne test</button></div>
+        <div class="inline-flex rounded-lg border border-falkor-line overflow-hidden"><button id="ths-support" class="px-2 py-1 bg-falkor/30" onclick="thScenario('support')">support crew</button><button id="ths-org" class="px-2 py-1" onclick="thScenario('org')">company brain</button><button id="ths-sally" class="px-2 py-1" onclick="thScenario('sally')">Sally–Anne test</button></div>
         <select id="th-entity" class="rounded px-2 py-1" onchange="loadTheater()"></select>
         <button onclick="thStep(-1)" class="px-2 py-1 rounded border border-falkor-line">◀</button>
         <button onclick="thToggle()" id="th-play" class="grad-btn px-3 py-1 rounded text-white w-16">Pause</button>
@@ -434,6 +443,7 @@ async function runPlan() {
 // ---------------------------------------------------------------- hitom
 async function loadHitomList() {
   const xs = await api(`/api/hitom?order=${$("#ht-order").value}&deception=${$("#ht-dec").checked}`);
+  setTimeout(() => { if (xs.length && $("#ht-item").textContent.includes("Select a question")) loadHitom(xs[0].idx); }, 50);
   $("#ht-list").innerHTML = xs.map(x => `<div class="p-2 rounded-lg hover:bg-white/5 cursor-pointer mb-1" onclick="loadHitom(${x.idx})">
     <span class="font-mono text-slate-500">#${x.idx}</span> ${x.question}
     <div class="mt-1">${x.so_ok ? '<span class="chip bg-emerald-500/15">SecondOrder ✓</span>' : '<span class="chip bg-amber-500/20" title="differs from the released label; matches the reference oracle">SecondOrder ≠ label</span>'}
@@ -493,11 +503,11 @@ async function loadBench() {
 
 // ---------------------------------------------------------------- Mind Theater
 let TH = null, THI = 0, THPLAY = true, THTIMER = null, THSID = "support";
-function thScenario(sid) { THSID = sid; ["support", "sally"].forEach(x => $("#ths-" + x).classList.toggle("bg-falkor/30", x === sid));
+function thScenario(sid) { THSID = sid; ["support", "org", "sally"].forEach(x => $("#ths-" + x).classList.toggle("bg-falkor/30", x === sid));
   $("#th-entity").innerHTML = ""; THPLAY = true; $("#th-play").textContent = "Pause"; loadTheater(); }
 const shortV = (v) => v == null ? "?" : String(v).length > 12 ? String(v).slice(0, 11) + "…" : v;
 async function loadTheater() {
-  const ent = $("#th-entity").value || (THSID === "sally" ? "marble" : "refund_4411");
+  const ent = $("#th-entity").value || ({sally: "marble", org: "launch_date"}[THSID] || "refund_4411");
   TH = await api(`/api/${THSID}/replay?entity=${encodeURIComponent(ent)}`);
   if (!$("#th-entity").innerHTML) $("#th-entity").innerHTML = TH.entities.map(e => `<option ${e === ent ? "selected" : ""}>${e}</option>`).join("");
   $("#th-ent-label").textContent = ent;
@@ -520,13 +530,14 @@ function buildStage() {
   const z = svg.append("g");
   Object.entries(TH.zones).forEach(([r, b]) => { z.append("rect").attr("x", b.x).attr("y", b.y).attr("width", b.w).attr("height", b.h).attr("rx", 18)
       .attr("fill", r === "__away" ? "rgba(255,255,255,.015)" : "rgba(116,102,255,.05)").attr("stroke", r === "__away" ? "#26263A" : "#7466FF55").attr("stroke-dasharray", r === "__away" ? "4 6" : null).attr("id", "zone-" + r);
-    z.append("text").attr("x", b.x + 16).attr("y", b.y + 24).attr("fill", r === "__away" ? "#6b7280" : "#a5a0ff").attr("font-family", "JetBrains Mono").attr("font-size", 12).text(r === "__away" ? "not in any channel (can't see anything)" : "#" + r); });
+    z.append("text").attr("x", r === "__away" ? b.x + b.w - 14 : b.x + 16).attr("y", r === "__away" ? b.y + b.h - 10 : b.y + 24).attr("text-anchor", r === "__away" ? "end" : "start")
+      .attr("fill", r === "__away" ? "#6b7280" : "#a5a0ff").attr("font-family", "JetBrains Mono").attr("font-size", 12).text(r === "__away" ? "not in any channel: sees nothing" : "#" + r); });
   TH.fx = svg.append("g");
   TH.orbs = svg.append("g");
   TH.agents.forEach(a => {
     const g = TH.orbs.append("g").attr("class", "orb").attr("id", "orb-" + a).attr("transform", `translate(${W / 2},${H / 2})`);
     g.append("circle").attr("r", 34).attr("fill", "none").attr("class", "halo").attr("stroke-width", 3).attr("filter", "url(#glow)");
-    g.append("circle").attr("r", 22).attr("fill", `url(#orbgrad-${a})`);
+    g.append("circle").attr("r", 22).attr("fill", `url(#orbgrad-${a})`).style("cursor", "pointer").on("click", () => inspectMind(a));
     const moons = g.append("g").attr("class", "moons").style("animation", `spin ${18 + Math.random() * 8}s linear infinite`);
     TH.agents.filter(b => b !== a).forEach((b, k, arr) => { const ang = 2 * Math.PI * k / arr.length;
       const mg = moons.append("g").attr("transform", `translate(${46 * Math.cos(ang)},${46 * Math.sin(ang)})`).attr("data-of", b);
@@ -588,6 +599,33 @@ async function refreshTheater(fromStart) {
   const tick = () => { if (k < last) { k++; thGo(k); setTimeout(tick, 1300); } }; setTimeout(tick, 600);
   document.getElementById("theater-card").scrollIntoView({behavior: "smooth", block: "center"});
 }
+async function inspectMind(a) {
+  const f = TH.frames[THI];
+  $("#dr-title").innerHTML = `${tag(a)}'s mind <span class="text-xs text-slate-500 font-mono">so:${THSID}:mind:${a}</span>`;
+  const m = f.minds[a], truth = f.truth;
+  const row = (who, v) => `<div class="flex justify-between py-1 border-b border-white/5"><span>${who}</span><span class="font-mono ${v == null ? 'text-slate-500' : v === truth ? 'right' : 'wrong'}">${v ?? "never heard"}</span></div>`;
+  let html = `<div class="text-xs text-slate-500 mb-2">At step #${f.seq}, about <b class="text-slate-300">${TH.entity}</b> (world: ${truth ?? "–"})</div>` +
+    `<div class="mb-3"><div class="text-xs text-slate-400 mb-1">What ${a} believes</div>${row(a, m.own)}</div>` +
+    `<div class="text-xs text-slate-400 mb-1">What ${a} thinks each other agent believes</div>` + Object.entries(m.of).map(([b, v]) => row(`${tag(b)}`, v)).join("");
+  if (THSID !== "sally") {
+    try { const g = await api(`/api/${THSID}/graph?agent=${a}`);
+      html += `<div class="text-xs text-slate-400 mt-4 mb-1">Stored now in FalkorDB: ${g.nodes.filter(n => n.kind === "perspective").length} perspectives, ${g.links.filter(l => l.kind === "BELIEVES").length} active belief edges</div>`;
+      const ex = await api(`/api/${THSID}/explain?chain=${encodeURIComponent(a)}&entity=${TH.entity}`);
+      html += `<div class="text-xs text-slate-400 mt-3 mb-1">Why (current)</div>` + ex.steps.map(x => `<div class="text-xs text-slate-300 mb-1">• ${tagAll(x)}</div>`).join("");
+    } catch (e) {}
+  }
+  $("#dr-body").innerHTML = html + `<div class="text-xs text-slate-500 mt-4">Each agent is a separate FalkorDB graph. In production, this agent's ACL user can read only this graph.</div>`;
+  $("#drawer").classList.remove("translate-x-full");
+}
+function closeDrawer() { $("#drawer").classList.add("translate-x-full"); }
+document.addEventListener("keydown", (e) => {
+  if (e.target.tagName === "INPUT") return;
+  if (e.key === "Escape") closeDrawer();
+  if ($("#tab-support").classList.contains("hidden") || !TH) return;
+  if (e.key === " ") { e.preventDefault(); thToggle(); }
+  if (e.key === "ArrowRight") thStep(1);
+  if (e.key === "ArrowLeft") thStep(-1);
+});
 function thSchedule() { clearTimeout(THTIMER); if (!THPLAY || !TH) return;
   const f = TH.frames[THI]; const wait = f.kind === "chatter" ? 280 : f.entity_changed ? 2300 : 1500;
   THTIMER = setTimeout(() => { if (THI >= TH.frames.length - 1) { THTIMER = setTimeout(() => { thGo(0, true); thSchedule(); }, 3500); return; } thGo(THI + 1); thSchedule(); }, wait); }

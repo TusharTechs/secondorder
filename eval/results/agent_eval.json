@@ -1,0 +1,908 @@
+{
+ "cases": [
+  {
+   "sid": "ae0",
+   "customer": "Maya",
+   "entity": "refund_5000",
+   "told": "approved",
+   "new": "rejected",
+   "message": "Hi! Any update on my order?"
+  },
+  {
+   "sid": "ae1",
+   "customer": "Arjun",
+   "entity": "delivery_date_5001",
+   "told": "Friday",
+   "new": "next Wednesday",
+   "message": "Hello, just following up on my ticket."
+  },
+  {
+   "sid": "ae2",
+   "customer": "Lena",
+   "entity": "discount_code_5002",
+   "told": "valid",
+   "new": "revoked",
+   "message": "Hey, what's the status?"
+  },
+  {
+   "sid": "ae3",
+   "customer": "Tom\u00e1s",
+   "entity": "warranty_repair_5003",
+   "told": "covered",
+   "new": "not covered",
+   "message": "Hi there, anything new on my case?"
+  },
+  {
+   "sid": "ae4",
+   "customer": "Aiko",
+   "entity": "cancellation_5004",
+   "told": "confirmed",
+   "new": "too late to cancel",
+   "message": "Hi! Any update on my order?"
+  },
+  {
+   "sid": "ae5",
+   "customer": "Noor",
+   "entity": "refund_5005",
+   "told": "approved",
+   "new": "rejected",
+   "message": "Hello, just following up on my ticket."
+  },
+  {
+   "sid": "ae6",
+   "customer": "Femi",
+   "entity": "delivery_date_5006",
+   "told": "Friday",
+   "new": "next Wednesday",
+   "message": "Hey, what's the status?"
+  },
+  {
+   "sid": "ae7",
+   "customer": "Priya",
+   "entity": "discount_code_5007",
+   "told": "valid",
+   "new": "revoked",
+   "message": "Hi there, anything new on my case?"
+  },
+  {
+   "sid": "ae8",
+   "customer": "Jonas",
+   "entity": "warranty_repair_5008",
+   "told": "covered",
+   "new": "not covered",
+   "message": "Hi! Any update on my order?"
+  },
+  {
+   "sid": "ae9",
+   "customer": "Sara",
+   "entity": "cancellation_5009",
+   "told": "confirmed",
+   "new": "too late to cancel",
+   "message": "Hello, just following up on my ticket."
+  },
+  {
+   "sid": "ae10",
+   "customer": "Maya",
+   "entity": "refund_5010",
+   "told": "approved",
+   "new": "rejected",
+   "message": "Hey, what's the status?"
+  },
+  {
+   "sid": "ae11",
+   "customer": "Arjun",
+   "entity": "delivery_date_5011",
+   "told": "Friday",
+   "new": "next Wednesday",
+   "message": "Hi there, anything new on my case?"
+  },
+  {
+   "sid": "ae12",
+   "customer": "Lena",
+   "entity": "discount_code_5012",
+   "told": "valid",
+   "new": "revoked",
+   "message": "Hi! Any update on my order?"
+  },
+  {
+   "sid": "ae13",
+   "customer": "Tom\u00e1s",
+   "entity": "warranty_repair_5013",
+   "told": "covered",
+   "new": "not covered",
+   "message": "Hello, just following up on my ticket."
+  },
+  {
+   "sid": "ae14",
+   "customer": "Aiko",
+   "entity": "cancellation_5014",
+   "told": "confirmed",
+   "new": "too late to cancel",
+   "message": "Hey, what's the status?"
+  },
+  {
+   "sid": "ae15",
+   "customer": "Noor",
+   "entity": "refund_5015",
+   "told": "approved",
+   "new": "rejected",
+   "message": "Hi there, anything new on my case?"
+  },
+  {
+   "sid": "ae16",
+   "customer": "Femi",
+   "entity": "delivery_date_5016",
+   "told": "Friday",
+   "new": "next Wednesday",
+   "message": "Hi! Any update on my order?"
+  },
+  {
+   "sid": "ae17",
+   "customer": "Priya",
+   "entity": "discount_code_5017",
+   "told": "valid",
+   "new": "revoked",
+   "message": "Hello, just following up on my ticket."
+  },
+  {
+   "sid": "ae18",
+   "customer": "Jonas",
+   "entity": "warranty_repair_5018",
+   "told": "covered",
+   "new": "not covered",
+   "message": "Hey, what's the status?"
+  },
+  {
+   "sid": "ae19",
+   "customer": "Sara",
+   "entity": "cancellation_5019",
+   "told": "confirmed",
+   "new": "too late to cancel",
+   "message": "Hi there, anything new on my case?"
+  }
+ ],
+ "rows": [
+  {
+   "sid": "ae0",
+   "arm": "flat",
+   "reply": "Hi Maya, thanks for checking in! I have an update on order 5000: the refund request wasn't approved, but a replacement has been approved for you instead. I don't have shipping details for the replacement yet, but I'm happy to help with anything else in the meantime.",
+   "tools": [
+    "my_facts",
+    "draft_reply"
+   ],
+   "input_tokens": 1507,
+   "corrects": false,
+   "contradicts_truth": false
+  },
+  {
+   "sid": "ae0",
+   "arm": "transcript",
+   "reply": "Hi Maya, thanks for checking in! I need to correct something about order #5000: you were told earlier that your refund was approved, but I'm sorry, that was a mistake. The refund was actually rejected. The good news is that a replacement has been approved for you. I'm sorry for the confusion, and I'm happy to help if you have any questions.",
+   "tools": [
+    "my_facts",
+    "draft_reply"
+   ],
+   "input_tokens": 2533,
+   "corrects": true,
+   "contradicts_truth": false
+  },
+  {
+   "sid": "ae0",
+   "arm": "secondorder",
+   "reply": "Hi Maya, thanks for checking in! I need to correct something first: the refund for order 5000 was not approved. It was rejected. The good news is that a replacement for the order has been approved. Sorry for the mix-up, and let me know if you have any questions!",
+   "tools": [
+    "my_facts",
+    "who_is_misinformed",
+    "draft_reply"
+   ],
+   "input_tokens": 2082,
+   "corrects": true,
+   "contradicts_truth": false
+  },
+  {
+   "sid": "ae1",
+   "arm": "flat",
+   "reply": "Hi Arjun, thanks for following up! Your order 5001 has been upgraded to free express shipping. It's expected to arrive next Wednesday. Let me know if there's anything else I can help with.",
+   "tools": [
+    "my_facts",
+    "draft_reply"
+   ],
+   "input_tokens": 1524,
+   "corrects": false,
+   "contradicts_truth": false
+  },
+  {
+   "sid": "ae1",
+   "arm": "transcript",
+   "reply": "Hi Arjun, thanks for following up on #5001! Sorry, we gave you the wrong date earlier. Your order is now due next Wednesday, not Friday. We've also upgraded your shipping to free express. Let me know if there's anything else I can help with.",
+   "tools": [
+    "my_facts",
+    "draft_reply"
+   ],
+   "input_tokens": 2484,
+   "corrects": true,
+   "contradicts_truth": false
+  },
+  {
+   "sid": "ae1",
+   "arm": "secondorder",
+   "reply": "Hi Arjun, thanks for following up! One update: order 5001 is now expected to arrive next Wednesday, not Friday. Sorry about the delay. To make up for it, we've upgraded your shipping to free express.",
+   "tools": [
+    "my_facts",
+    "who_is_misinformed",
+    "draft_reply"
+   ],
+   "input_tokens": 2108,
+   "corrects": true,
+   "contradicts_truth": false
+  },
+  {
+   "sid": "ae2",
+   "arm": "flat",
+   "reply": "Hi Lena! Here's what I have for order 5002: the discount code on it has been revoked, and you've been given a $15 store credit. I don't have any shipping or tracking updates for the order yet. If that's what you're after, let me know and I'll look into it for you.",
+   "tools": [
+    "my_facts",
+    "draft_reply"
+   ],
+   "input_tokens": 1509,
+   "corrects": false,
+   "contradicts_truth": false
+  },
+  {
+   "sid": "ae2",
+   "arm": "transcript",
+   "reply": "Hi Lena, thanks for waiting! I need to correct something on order #5002: you were told earlier that your discount code was valid, but it has been revoked, so it can't be used. I'm sorry for the mix-up. To make up for it, we've added $15 in store credit to your account.",
+   "tools": [
+    "my_facts",
+    "draft_reply"
+   ],
+   "input_tokens": 2665,
+   "corrects": true,
+   "contradicts_truth": false
+  },
+  {
+   "sid": "ae2",
+   "arm": "secondorder",
+   "reply": "Hi Lena! Quick update on order 5002: the discount code you had has been revoked, so it can't be used anymore. Sorry about that. To make up for it, we've put $15 in store credit on your account.",
+   "tools": [
+    "my_facts",
+    "who_is_misinformed",
+    "draft_reply"
+   ],
+   "input_tokens": 2086,
+   "corrects": true,
+   "contradicts_truth": false
+  },
+  {
+   "sid": "ae3",
+   "arm": "flat",
+   "reply": "Hi Tom\u00e1s, thanks for checking in! Our Escalation team has an update on your repair (case 5003): unfortunately the repair isn't covered under warranty, and the repair quote is $40. If you'd like to go ahead, or if you have questions, just let me know and I'll help with next steps.",
+   "tools": [
+    "my_facts",
+    "draft_reply"
+   ],
+   "input_tokens": 1519,
+   "corrects": false,
+   "contradicts_truth": false
+  },
+  {
+   "sid": "ae3",
+   "arm": "transcript",
+   "reply": "Hi Tom\u00e1s, thanks for checking in! I have an important correction first: you were told earlier that your warranty repair on #5003 would be covered, but that was wrong. The repair is not covered under warranty, and I'm sorry for the confusion. We've arranged a repair quote for you of $40. Let me know if you'd like to go ahead or if you have any questions.",
+   "tools": [
+    "my_facts",
+    "draft_reply"
+   ],
+   "input_tokens": 2605,
+   "corrects": true,
+   "contradicts_truth": false
+  },
+  {
+   "sid": "ae3",
+   "arm": "secondorder",
+   "reply": "Hi Tom\u00e1s, thanks for checking in! Nothing has changed since our last update: the repair for order 5003 isn't covered under warranty, and the repair quote is still $40. Just let me know if you'd like to go ahead with the repair or if you have any questions.",
+   "tools": [
+    "my_facts",
+    "who_is_misinformed",
+    "what_does_person_believe",
+    "what_does_person_believe",
+    "draft_reply"
+   ],
+   "input_tokens": 3526,
+   "corrects": false,
+   "contradicts_truth": false
+  },
+  {
+   "sid": "ae4",
+   "arm": "flat",
+   "reply": "Hi Aiko! For your order #5004, it's too late to cancel it, but a return label has been emailed to you, so you can send it back once it arrives. I don't have any tracking or delivery details for it yet. I'm happy to help with anything else in the meantime!",
+   "tools": [
+    "my_facts",
+    "draft_reply"
+   ],
+   "input_tokens": 1517,
+   "corrects": false,
+   "contradicts_truth": false
+  },
+  {
+   "sid": "ae4",
+   "arm": "transcript",
+   "reply": "Hi Aiko, thanks for checking in on order #5004! First, a correction, and I'm sorry: you were told earlier that your cancellation was confirmed, but the order had already gone too far to cancel. To make up for it, we've emailed you a return label so you can send the item back once it arrives.",
+   "tools": [
+    "my_facts",
+    "draft_reply"
+   ],
+   "input_tokens": 2577,
+   "corrects": true,
+   "contradicts_truth": false
+  },
+  {
+   "sid": "ae4",
+   "arm": "secondorder",
+   "reply": "Hi Aiko! I'm sorry, but I need to correct something: your cancellation for order 5004 didn't go through. It was too late to cancel. The good news is we've emailed you a return label, so you can send the item back once it arrives. Let me know if you need any help with the return!",
+   "tools": [
+    "my_facts",
+    "who_is_misinformed",
+    "draft_reply"
+   ],
+   "input_tokens": 2101,
+   "corrects": true,
+   "contradicts_truth": false
+  },
+  {
+   "sid": "ae5",
+   "arm": "flat",
+   "reply": "Hi Noor, thanks for following up! I have an update on order 5005: the refund request wasn't approved, but a replacement has been approved for you. Let me know if you have any questions about the replacement.",
+   "tools": [
+    "my_facts",
+    "draft_reply"
+   ],
+   "input_tokens": 1509,
+   "corrects": false,
+   "contradicts_truth": false
+  },
+  {
+   "sid": "ae5",
+   "arm": "transcript",
+   "reply": "Hi Noor, thanks for following up on ticket #5005! I'm sorry, but I need to correct something: you were told earlier that your refund was approved, and that was a mistake. The refund was actually rejected. The good news is that a replacement has been approved for you instead.",
+   "tools": [
+    "my_facts",
+    "draft_reply"
+   ],
+   "input_tokens": 2553,
+   "corrects": true,
+   "contradicts_truth": false
+  },
+  {
+   "sid": "ae5",
+   "arm": "secondorder",
+   "reply": "Hi Noor, thanks for following up on order 5005! I'm sorry, but you may have heard otherwise: the refund was not approved. The good news is that a replacement has been approved for you instead. If you have any questions about it, just let me know.",
+   "tools": [
+    "my_facts",
+    "who_is_misinformed",
+    "draft_reply"
+   ],
+   "input_tokens": 2084,
+   "corrects": true,
+   "contradicts_truth": false
+  },
+  {
+   "sid": "ae6",
+   "arm": "flat",
+   "reply": "Hi Femi! Your order #5006 has been upgraded to free express shipping, and it's due to arrive next Wednesday. If there's anything else I can help with, just let me know.",
+   "tools": [
+    "my_facts",
+    "draft_reply"
+   ],
+   "input_tokens": 1514,
+   "corrects": false,
+   "contradicts_truth": false
+  },
+  {
+   "sid": "ae6",
+   "arm": "transcript",
+   "reply": "Hi Femi, thanks for checking in! I need to correct what you were told earlier: your order #5006 is now expected to arrive next Wednesday, not Friday. Sorry for the mix-up. A shipping upgrade to free express has been requested for your order, but I'm still confirming it can be applied, since our terms allow only one discount per order. I'll let you know as soon as I hear back.",
+   "tools": [
+    "my_facts",
+    "draft_reply"
+   ],
+   "input_tokens": 2536,
+   "corrects": true,
+   "contradicts_truth": false
+  },
+  {
+   "sid": "ae6",
+   "arm": "secondorder",
+   "reply": "Hi Femi! Quick update on order 5006: the delivery date is now next Wednesday, not Friday as you were told earlier. Sorry about the change. To make up for it, we've upgraded your shipping to free express.",
+   "tools": [
+    "my_facts",
+    "who_is_misinformed",
+    "draft_reply"
+   ],
+   "input_tokens": 2096,
+   "corrects": true,
+   "contradicts_truth": false
+  },
+  {
+   "sid": "ae7",
+   "arm": "flat",
+   "reply": "Hi Priya, thanks for checking in! There are two updates on your case: a $15 store credit has been added to your account, and the earlier discount code has been revoked. If you have any questions about either one, just let me know.",
+   "tools": [
+    "my_facts",
+    "draft_reply"
+   ],
+   "input_tokens": 1515,
+   "corrects": true,
+   "contradicts_truth": false
+  },
+  {
+   "sid": "ae7",
+   "arm": "transcript",
+   "reply": "Hi Priya, thanks for waiting! I need to correct something about case #5007: you were told earlier that your discount code was valid, but it has actually been revoked, and I'm sorry for the mix-up. To make up for it, we've issued $15 in store credit to your account.",
+   "tools": [
+    "my_facts",
+    "draft_reply"
+   ],
+   "input_tokens": 2521,
+   "corrects": true,
+   "contradicts_truth": false
+  },
+  {
+   "sid": "ae7",
+   "arm": "secondorder",
+   "reply": "Hi Priya, thanks for checking in! I have an update: the discount code on order 5007 has been revoked, so it won't work anymore. To make up for it, we've issued you $15 in store credit. Let me know if there's anything else I can help with!",
+   "tools": [
+    "my_facts",
+    "who_is_misinformed",
+    "draft_reply"
+   ],
+   "input_tokens": 2092,
+   "corrects": true,
+   "contradicts_truth": false
+  },
+  {
+   "sid": "ae8",
+   "arm": "flat",
+   "reply": "Hi Jonas! I don't have a shipping status for your order in my notes right now, so I can't give you a delivery update yet. What I do have is about item 5008: the repair isn't covered by warranty, and the repair quote is $40. If you send me your order number, I'll look into the shipping status for you.",
+   "tools": [
+    "my_facts",
+    "draft_reply"
+   ],
+   "input_tokens": 1517,
+   "corrects": false,
+   "contradicts_truth": false
+  },
+  {
+   "sid": "ae8",
+   "arm": "transcript",
+   "reply": "Hi Jonas, thanks for checking in! I need to correct something about order #5008: you were told earlier that the warranty repair is covered, but it isn't. I'm sorry for the mix-up. We've arranged a repair quote for you, which is $40. Let me know if you'd like to go ahead or if you have any questions.",
+   "tools": [
+    "my_facts",
+    "draft_reply"
+   ],
+   "input_tokens": 2585,
+   "corrects": true,
+   "contradicts_truth": false
+  },
+  {
+   "sid": "ae8",
+   "arm": "secondorder",
+   "reply": "Hi Jonas! I have an update on your repair for order 5008. I'm sorry to say the repair isn't covered under warranty after all, and the repair quote is $40. If you'd like to go ahead, or if you have any questions, just let me know.",
+   "tools": [
+    "my_facts",
+    "who_is_misinformed",
+    "draft_reply"
+   ],
+   "input_tokens": 2098,
+   "corrects": true,
+   "contradicts_truth": false
+  },
+  {
+   "sid": "ae9",
+   "arm": "flat",
+   "reply": "Hi Sara, thanks for following up! For order 5009, unfortunately it's too late to cancel, but a return label has been emailed to you so you can send it back. Let me know if you have any trouble finding it.",
+   "tools": [
+    "my_facts",
+    "draft_reply"
+   ],
+   "input_tokens": 1515,
+   "corrects": false,
+   "contradicts_truth": false
+  },
+  {
+   "sid": "ae9",
+   "arm": "transcript",
+   "reply": "Hi Sara, thanks for following up on order #5009. I'm sorry, but I have to correct what you were told earlier: the order had already gone too far to be cancelled, so the cancellation didn't go through. We've emailed you a return label so you can send the order back once it arrives. Please let me know if you'd like help with the return.",
+   "tools": [
+    "my_facts",
+    "draft_reply"
+   ],
+   "input_tokens": 2493,
+   "corrects": true,
+   "contradicts_truth": false
+  },
+  {
+   "sid": "ae9",
+   "arm": "secondorder",
+   "reply": "Hi Sara, thanks for following up! I'm sorry, but there's been a correction on order 5009: it was too late to cancel, so the cancellation didn't go through. The good news is that we've emailed you a return label, so once the order arrives you can send it back with that label.",
+   "tools": [
+    "my_facts",
+    "who_is_misinformed",
+    "draft_reply"
+   ],
+   "input_tokens": 2097,
+   "corrects": true,
+   "contradicts_truth": false
+  },
+  {
+   "sid": "ae10",
+   "arm": "flat",
+   "reply": "Hi Maya, thanks for checking in! For order 5010, the refund request wasn't approved, but a replacement has been approved. Our Escalation team passed this update along to me. Let me know if you have any other questions.",
+   "tools": [
+    "my_facts",
+    "draft_reply"
+   ],
+   "input_tokens": 1503,
+   "corrects": false,
+   "contradicts_truth": false
+  },
+  {
+   "sid": "ae10",
+   "arm": "transcript",
+   "reply": "Hi Maya, thanks for checking in on order #5010. I'm sorry, but I have to correct something you were told earlier: the refund was not approved after all. It was rejected. The good news is that a replacement has been approved for you instead.",
+   "tools": [
+    "my_facts",
+    "draft_reply"
+   ],
+   "input_tokens": 2491,
+   "corrects": true,
+   "contradicts_truth": false
+  },
+  {
+   "sid": "ae10",
+   "arm": "secondorder",
+   "reply": "Hi Maya, thanks for checking in! I need to correct something: the refund for order 5010 was not approved. It was rejected, and I'm sorry if you were told otherwise. The good news is that a replacement for order 5010 has been approved.",
+   "tools": [
+    "my_facts",
+    "who_is_misinformed",
+    "draft_reply"
+   ],
+   "input_tokens": 2078,
+   "corrects": true,
+   "contradicts_truth": false
+  },
+  {
+   "sid": "ae11",
+   "arm": "flat",
+   "reply": "Hi Arjun, thanks for checking in! Yes, there's news on order 5011: it has been upgraded to free express shipping, and it's now due to arrive next Wednesday. If there's anything else I can help with, just let me know.",
+   "tools": [
+    "my_facts",
+    "draft_reply"
+   ],
+   "input_tokens": 1524,
+   "corrects": true,
+   "contradicts_truth": false
+  },
+  {
+   "sid": "ae11",
+   "arm": "transcript",
+   "reply": "Hi Arjun, thanks for checking in! One correction on order #5011: the estimated delivery date is now next Wednesday, not Friday as we told you before. Sorry for the mix-up. A shipping upgrade for your order has also been discussed. I'm still checking that it fits our one-discount-per-order policy, and I'll confirm before promising anything.",
+   "tools": [
+    "my_facts",
+    "draft_reply"
+   ],
+   "input_tokens": 2532,
+   "corrects": true,
+   "contradicts_truth": false
+  },
+  {
+   "sid": "ae11",
+   "arm": "secondorder",
+   "reply": "Hi Arjun, thanks for checking in! I have an update on order 5011. The delivery date is now next Wednesday, not Friday. To make up for the change, your order has been upgraded to free express shipping. Sorry for the delay, and let me know if there's anything else I can do.",
+   "tools": [
+    "my_facts",
+    "who_is_misinformed",
+    "draft_reply"
+   ],
+   "input_tokens": 2108,
+   "corrects": true,
+   "contradicts_truth": false
+  },
+  {
+   "sid": "ae12",
+   "arm": "flat",
+   "reply": "Hi Lena! I don't have a shipping status update for your order yet. Here's what I can see: the discount code on order 5012 was revoked, and you've been given $15 in store credit instead. I'll keep an eye out for tracking details and let you know as soon as I have them.",
+   "tools": [
+    "my_facts",
+    "draft_reply"
+   ],
+   "input_tokens": 1513,
+   "corrects": false,
+   "contradicts_truth": false
+  },
+  {
+   "sid": "ae12",
+   "arm": "transcript",
+   "reply": "Hi Lena, thanks for checking in! I need to correct something first. You were told earlier that your discount code on order #5012 was valid, but it has actually been revoked. I'm sorry for the mix-up. To make up for it, we've issued you $15 in store credit. I don't have a shipping status update in front of me yet, but I'm happy to look into that for you.",
+   "tools": [
+    "my_facts",
+    "draft_reply"
+   ],
+   "input_tokens": 2543,
+   "corrects": true,
+   "contradicts_truth": false
+  },
+  {
+   "sid": "ae12",
+   "arm": "secondorder",
+   "reply": "Hi Lena, thanks for checking in! I don't have a shipping status for your order in front of me yet, so I don't want to guess. I do have one update for you: discount code 5012 has been revoked, so it won't work anymore. To make up for it, we've added a $15 store credit to your account.",
+   "tools": [
+    "my_facts",
+    "who_is_misinformed",
+    "draft_reply"
+   ],
+   "input_tokens": 2090,
+   "corrects": true,
+   "contradicts_truth": false
+  },
+  {
+   "sid": "ae13",
+   "arm": "flat",
+   "reply": "Hi Tom\u00e1s, thanks for following up! For your repair on ticket 5013, the quote is $40. Unfortunately, this repair isn't covered under warranty. Just let me know if you'd like to go ahead, or if you have any questions.",
+   "tools": [
+    "my_facts",
+    "draft_reply"
+   ],
+   "input_tokens": 1519,
+   "corrects": false,
+   "contradicts_truth": false
+  },
+  {
+   "sid": "ae13",
+   "arm": "transcript",
+   "reply": "Hi Tom\u00e1s, thanks for following up on ticket #5013! I'm sorry, but we got this wrong earlier: the warranty doesn't cover this repair after all, even though you were told it did. We've set up a repair quote for you of $40. Just let me know if you'd like to go ahead or if you have any questions.",
+   "tools": [
+    "my_facts",
+    "draft_reply"
+   ],
+   "input_tokens": 2563,
+   "corrects": true,
+   "contradicts_truth": false
+  },
+  {
+   "sid": "ae13",
+   "arm": "secondorder",
+   "reply": "Hi Tom\u00e1s, thanks for following up! I have an update on your ticket (5013): unfortunately the repair isn't covered under warranty, and the repair quote is $40. Let me know if you'd like to go ahead or if you have any questions.",
+   "tools": [
+    "my_facts",
+    "who_is_misinformed",
+    "draft_reply"
+   ],
+   "input_tokens": 2014,
+   "corrects": false,
+   "contradicts_truth": false
+  },
+  {
+   "sid": "ae14",
+   "arm": "flat",
+   "reply": "Hi Aiko! Here's where order #5014 stands: it's too late to cancel it, but we've emailed you a return label. Once it arrives, you can use that label to send the item back. Let me know if you need anything else!",
+   "tools": [
+    "my_facts",
+    "draft_reply"
+   ],
+   "input_tokens": 1513,
+   "corrects": false,
+   "contradicts_truth": false
+  },
+  {
+   "sid": "ae14",
+   "arm": "transcript",
+   "reply": "Hi Aiko, thanks for checking in about order #5014. I'm sorry, but we got this wrong earlier: the order had already gone too far to cancel, so the cancellation you were told about didn't go through. To make up for it, we've emailed you a return label so you can send the item back once it arrives. Please check your inbox, and let me know if you can't find it!",
+   "tools": [
+    "my_facts",
+    "draft_reply"
+   ],
+   "input_tokens": 2607,
+   "corrects": true,
+   "contradicts_truth": false
+  },
+  {
+   "sid": "ae14",
+   "arm": "secondorder",
+   "reply": "Hi Aiko, thanks for checking in! I'm sorry for the mix-up: it turns out it was too late to cancel order 5014, so the cancellation didn't go through. To make up for it, we've emailed you a return label so you can send the item back once it arrives.",
+   "tools": [
+    "my_facts",
+    "who_is_misinformed",
+    "draft_reply"
+   ],
+   "input_tokens": 2097,
+   "corrects": true,
+   "contradicts_truth": false
+  },
+  {
+   "sid": "ae15",
+   "arm": "flat",
+   "reply": "Hi Noor, thanks for checking in! There's an update on order 5015: the refund request was not approved, but a replacement has been approved. If you have any questions about the replacement, just let me know.",
+   "tools": [
+    "my_facts",
+    "draft_reply"
+   ],
+   "input_tokens": 1509,
+   "corrects": false,
+   "contradicts_truth": false
+  },
+  {
+   "sid": "ae15",
+   "arm": "transcript",
+   "reply": "Hi Noor, thanks for checking in! I need to correct something about order #5015. You were told earlier that your refund was approved, but I'm sorry, that was a mistake: the refund has been rejected. The good news is that a replacement has been approved for you instead.",
+   "tools": [
+    "my_facts",
+    "draft_reply"
+   ],
+   "input_tokens": 2501,
+   "corrects": true,
+   "contradicts_truth": false
+  },
+  {
+   "sid": "ae15",
+   "arm": "secondorder",
+   "reply": "Hi Noor, thanks for checking in! I need to correct something: the refund for order 5015 was not approved after all. It was rejected, and I'm sorry for the mix-up. The good news is that a replacement for order 5015 has been approved.",
+   "tools": [
+    "my_facts",
+    "who_is_misinformed",
+    "draft_reply"
+   ],
+   "input_tokens": 2084,
+   "corrects": true,
+   "contradicts_truth": false
+  },
+  {
+   "sid": "ae16",
+   "arm": "flat",
+   "reply": "Hi Femi! Good news: your order #5016 has been upgraded to free express shipping, and it should arrive next Wednesday. Let me know if there's anything else I can help with!",
+   "tools": [
+    "my_facts",
+    "draft_reply"
+   ],
+   "input_tokens": 1518,
+   "corrects": false,
+   "contradicts_truth": false
+  },
+  {
+   "sid": "ae16",
+   "arm": "transcript",
+   "reply": "Hi Femi! Thanks for your patience. I need to correct what we told you earlier: your order #5016 will arrive next Wednesday, not Friday. Sorry for the mix-up. We've also upgraded your order to express shipping for free.",
+   "tools": [
+    "my_facts",
+    "draft_reply"
+   ],
+   "input_tokens": 2638,
+   "corrects": true,
+   "contradicts_truth": false
+  },
+  {
+   "sid": "ae16",
+   "arm": "secondorder",
+   "reply": "Hi Femi, thanks for checking in! I have an update on order 5016: the delivery date is now next Wednesday, not Friday as you may have been told earlier. Sorry about the change. As a thank-you for your patience, we've upgraded your order to free express shipping.",
+   "tools": [
+    "my_facts",
+    "who_is_misinformed",
+    "draft_reply"
+   ],
+   "input_tokens": 2100,
+   "corrects": true,
+   "contradicts_truth": false
+  },
+  {
+   "sid": "ae17",
+   "arm": "flat",
+   "reply": "Hi Priya, thanks for following up! According to the update I got from our Escalation team, discount code 5017 has been revoked and $15 in store credit has been issued to you. If anything else on your ticket is still open, let me know and I'll look into it.",
+   "tools": [
+    "my_facts",
+    "draft_reply"
+   ],
+   "input_tokens": 1515,
+   "corrects": true,
+   "contradicts_truth": false
+  },
+  {
+   "sid": "ae17",
+   "arm": "transcript",
+   "reply": "Hi Priya, thanks for following up on ticket #5017! I'm sorry, but we got this wrong earlier: we told you your discount code was valid, but it has actually been revoked. To make up for it, we've added $15 in store credit to your account. Let me know if there's anything else I can help with.",
+   "tools": [
+    "my_facts",
+    "draft_reply"
+   ],
+   "input_tokens": 2585,
+   "corrects": true,
+   "contradicts_truth": false
+  },
+  {
+   "sid": "ae17",
+   "arm": "secondorder",
+   "reply": "Hi Priya, thanks for following up! I have an update on your ticket: the discount code on your order (5017) has been revoked, so unfortunately it's no longer valid. To make up for it, we've issued you $15 in store credit. Let me know if there's anything else I can help with!",
+   "tools": [
+    "my_facts",
+    "who_is_misinformed",
+    "draft_reply"
+   ],
+   "input_tokens": 2092,
+   "corrects": true,
+   "contradicts_truth": false
+  },
+  {
+   "sid": "ae18",
+   "arm": "flat",
+   "reply": "Hi Jonas! Here's the latest on your repair for order 5018: the repair isn't covered by warranty, and the quote is $40. I don't have any other status updates yet. Let me know if you'd like to go ahead or if you have questions!",
+   "tools": [
+    "my_facts",
+    "draft_reply"
+   ],
+   "input_tokens": 1513,
+   "corrects": false,
+   "contradicts_truth": false
+  },
+  {
+   "sid": "ae18",
+   "arm": "transcript",
+   "reply": "Hi Jonas, thanks for checking in on order #5018. I'm sorry, but we got something wrong earlier: the warranty doesn't cover this repair after all. We've arranged a repair quote for you, and it comes to $40. Just let me know if you'd like to go ahead and I'll take care of it.",
+   "tools": [
+    "my_facts",
+    "draft_reply"
+   ],
+   "input_tokens": 2593,
+   "corrects": true,
+   "contradicts_truth": false
+  },
+  {
+   "sid": "ae18",
+   "arm": "secondorder",
+   "reply": "Hi Jonas, thanks for checking in! I have an update on your repair (5018): unfortunately it isn't covered under warranty after all, sorry if you heard otherwise earlier. The repair quote is $40. Let me know if you'd like to go ahead with it.",
+   "tools": [
+    "my_facts",
+    "who_is_misinformed",
+    "draft_reply"
+   ],
+   "input_tokens": 2094,
+   "corrects": true,
+   "contradicts_truth": false
+  },
+  {
+   "sid": "ae19",
+   "arm": "flat",
+   "reply": "Hi Sara, thanks for checking in! Here's the latest on order 5019: it's too late to cancel it, unfortunately. We've emailed you a return label, so you can send the item back once it arrives. Let me know if you need any help with the return.",
+   "tools": [
+    "my_facts",
+    "draft_reply"
+   ],
+   "input_tokens": 1515,
+   "corrects": false,
+   "contradicts_truth": false
+  },
+  {
+   "sid": "ae19",
+   "arm": "transcript",
+   "reply": "Hi Sara, thanks for checking in on order #5019. I'm sorry, but I need to correct what you were told earlier: the order was too far along to cancel, so the cancellation didn't go through. We've emailed you a return label, so you can send the item back once it arrives. Let me know if you need help with the return!",
+   "tools": [
+    "my_facts",
+    "draft_reply"
+   ],
+   "input_tokens": 2517,
+   "corrects": true,
+   "contradicts_truth": false
+  },
+  {
+   "sid": "ae19",
+   "arm": "secondorder",
+   "reply": "Hi Sara, thanks for checking in! I have an update on order 5019. Unfortunately it was too late to cancel it, so the cancellation didn't go through. To make up for it, we've emailed you a return label so you can send the order back once it arrives. Sorry for the mix-up!",
+   "tools": [
+    "my_facts",
+    "who_is_misinformed",
+    "draft_reply"
+   ],
+   "input_tokens": 2097,
+   "corrects": true,
+   "contradicts_truth": false
+  }
+ ]
+}

@@ -51,17 +51,19 @@ def _facts(view: AgentView):
     return out
 
 
-def run(sid: str, me: str, customer: str, incoming: str, mode: str = "secondorder", model: str = OPUS) -> dict:
+def run(sid: str, me: str, customer: str, incoming: str, mode: str = "secondorder", model: str = OPUS,
+        system_extra: str = "") -> dict:
     view = AgentView(sid, me)
     tools = TOOLS_COMMON + (TOOLS_TOM if mode == "secondorder" else [])
     client = anthropic.Anthropic(max_retries=4)
     messages = [{"role": "user", "content": f"New message from {customer}: \"{incoming}\""}]
-    trace, draft = [], None
+    trace, draft, in_tokens = [], None, 0
     for _ in range(8):
         resp = client.beta.messages.create(
-            model=model, max_tokens=4000, system=SYSTEM.format(me=me, customer=customer), tools=tools,
+            model=model, max_tokens=4000, system=SYSTEM.format(me=me, customer=customer) + system_extra, tools=tools,
             messages=messages, output_config={"effort": "low"},
             betas=["server-side-fallback-2026-07-01"], fallbacks="default")
+        in_tokens += resp.usage.input_tokens
         messages.append({"role": "assistant", "content": resp.content})
         uses = [b for b in resp.content if b.type == "tool_use"]
         if not uses:
@@ -86,7 +88,8 @@ def run(sid: str, me: str, customer: str, incoming: str, mode: str = "secondorde
         messages.append({"role": "user", "content": results})
         if draft:
             break
-    return {"mode": mode, "agent": me, "customer": customer, "incoming": incoming, "draft": draft, "trace": trace}
+    return {"mode": mode, "agent": me, "customer": customer, "incoming": incoming, "draft": draft, "trace": trace,
+            "input_tokens": in_tokens}
 
 
 def commit_reply(sid: str, me: str, customer: str, room: str, draft: dict):

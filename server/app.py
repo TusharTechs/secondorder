@@ -20,7 +20,7 @@ from secondorder import tools  # noqa: E402
 from secondorder.agent_view import AgentView  # noqa: E402
 from secondorder.engine import Q, Scenario  # noqa: E402
 from secondorder.hitom import parse_question, parse_story, run_events  # noqa: E402
-from secondorder.scenarios import build_org, build_support, handoff  # noqa: E402
+from secondorder.scenarios import build_org, build_sally, build_support, handoff  # noqa: E402
 
 ROOT = os.path.join(os.path.dirname(__file__), "..")
 STATIC = os.path.join(os.path.dirname(__file__), "static")
@@ -36,7 +36,8 @@ def index():
     return FileResponse(os.path.join(STATIC, "index.html"))
 
 
-ALLOWED = {"support", "org"}
+ALLOWED = {"support", "org", "sally"}
+BUILDERS = {"support": build_support, "org": build_org, "sally": build_sally}
 
 
 def _ensure(sid):
@@ -44,12 +45,7 @@ def _ensure(sid):
         raise HTTPException(404, "unknown scenario")
     sc = Scenario.load(sid)
     if not sc.agents:
-        if sid == "support":
-            build_support()
-        elif sid == "org":
-            build_org()
-        else:
-            raise HTTPException(404, "unknown scenario")
+        BUILDERS[sid]()
         sc = Scenario.load(sid)
     return sc
 
@@ -72,10 +68,7 @@ def state(sid: str):
 def reset(sid: str):
     if sid not in ALLOWED:
         raise HTTPException(404, "unknown scenario")
-    if sid == "support":
-        build_support()
-    elif sid == "org":
-        build_org()
+    BUILDERS[sid]()
     return _snapshot(sid)
 
 

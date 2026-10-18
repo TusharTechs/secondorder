@@ -78,6 +78,7 @@ tailwind.config = { theme: { extend: {
         <p class="text-xs text-slate-500">Orbs are agents, moving between channels. Each orb's ring is its own belief about <b class="text-slate-300" id="th-ent-label">the refund</b>. The little moons are what it thinks <i>each other agent</i> believes.
           <span class="right">green</span> = true, <span class="wrong">red</span> = false, dim = never heard. Events beam only to the agents who witnessed them.</p></div>
       <div class="flex items-center gap-2 text-xs">
+        <div class="inline-flex rounded-lg border border-falkor-line overflow-hidden"><button id="ths-support" class="px-2 py-1 bg-falkor/30" onclick="thScenario('support')">support crew</button><button id="ths-sally" class="px-2 py-1" onclick="thScenario('sally')">Sally–Anne test</button></div>
         <select id="th-entity" class="rounded px-2 py-1" onchange="loadTheater()"></select>
         <button onclick="thStep(-1)" class="px-2 py-1 rounded border border-falkor-line">◀</button>
         <button onclick="thToggle()" id="th-play" class="grad-btn px-3 py-1 rounded text-white w-16">Pause</button>
@@ -251,7 +252,7 @@ document.querySelectorAll(".tab").forEach(b => b.onclick = () => {
 
 const dots = (ws) => ws.map(w => `<span title="${w}" class="inline-block w-2.5 h-2.5 rounded-full mr-0.5" style="background:${color(w)}"></span>`).join("");
 const tag = (a) => `<span class="font-semibold" style="color:${color(a)}">${a}</span>`;
-const tagAll = (s) => s.replace(/\b(Maya|Billing|Shipping|Escalation|Finance|Asha|Ben|Chen|Dara|Eli|Fatima|Gus)\b/g, m => tag(m));
+const tagAll = (s) => s.replace(/\b(Maya|Billing|Shipping|Escalation|Finance|Asha|Ben|Chen|Dara|Eli|Fatima|Gus|Sally|Anne)\b/g, m => tag(m));
 
 async function heroStats() {
   const s = await api("/api/eval").catch(() => ({}));
@@ -481,11 +482,13 @@ async function loadBench() {
 
 
 // ---------------------------------------------------------------- Mind Theater
-let TH = null, THI = 0, THPLAY = true, THTIMER = null;
+let TH = null, THI = 0, THPLAY = true, THTIMER = null, THSID = "support";
+function thScenario(sid) { THSID = sid; ["support", "sally"].forEach(x => $("#ths-" + x).classList.toggle("bg-falkor/30", x === sid));
+  $("#th-entity").innerHTML = ""; THPLAY = true; $("#th-play").textContent = "Pause"; loadTheater(); }
 const shortV = (v) => v == null ? "?" : String(v).length > 12 ? String(v).slice(0, 11) + "…" : v;
 async function loadTheater() {
-  const ent = $("#th-entity").value || "refund_4411";
-  TH = await api(`/api/support/replay?entity=${encodeURIComponent(ent)}`);
+  const ent = $("#th-entity").value || (THSID === "sally" ? "marble" : "refund_4411");
+  TH = await api(`/api/${THSID}/replay?entity=${encodeURIComponent(ent)}`);
   if (!$("#th-entity").innerHTML) $("#th-entity").innerHTML = TH.entities.map(e => `<option ${e === ent ? "selected" : ""}>${e}</option>`).join("");
   $("#th-ent-label").textContent = ent;
   TH.agents.forEach((a, i) => AG[a] = AG[a] || PALETTE[i % PALETTE.length]);
@@ -536,7 +539,8 @@ const tone = (v, truth) => v == null || v === "(unknown)" ? "#3a3a52" : v === tr
 function thGo(i, instant) {
   if (!TH) return; THI = Math.max(0, Math.min(TH.frames.length - 1, i)); $("#th-scrub").value = THI;
   const f = TH.frames[THI], pos = slotFor(f), truth = f.truth, dur = instant ? 0 : 650;
-  $("#th-caption").innerHTML = `<span class="text-falkor">#${f.seq}</span> ${tagAll(f.text)} <span class="text-slate-500">· world: ${TH.entity} = <b class="text-white">${truth ?? "–"}</b></span>`;
+  const sallyQ = THSID === "sally" && THI === TH.frames.length - 1 ? ` <span class="grad-text font-bold">→ Sally's mind says: ${f.minds.Sally.own} · Anne knows Sally thinks: ${f.minds.Anne.of.Sally}</span>` : "";
+  $("#th-caption").innerHTML = `<span class="text-falkor">#${f.seq}</span> ${tagAll(f.text)} <span class="text-slate-500">· world: ${TH.entity} = <b class="text-white">${truth ?? "–"}</b></span>${sallyQ}`;
   TH.agents.forEach(a => {
     const g = d3.select("#orb-" + a), m = f.minds[a];
     g.transition().duration(dur).ease(d3.easeCubicInOut).attr("transform", `translate(${pos[a][0]},${pos[a][1]})`);
@@ -567,6 +571,7 @@ function beams(f, pos) {
   }
 }
 async function refreshTheater(fromStart) {
+  if (THSID !== "support") thScenario("support");
   const keep = THI; await loadTheater(); const last = TH.frames.length - 1;
   if (fromStart) return; THPLAY = false; $("#th-play").textContent = "Play"; clearTimeout(THTIMER);
   thGo(Math.max(0, last - 3), true); let k = Math.max(0, last - 3);

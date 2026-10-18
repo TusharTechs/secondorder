@@ -102,3 +102,17 @@ def build_org(sid: str = ORG_SID) -> Scenario:
     for p in ["Asha", "Chen", "Dara"]:
         sc.exit(p)
     return sc
+
+
+def build_sally(sid: str = "sally") -> Scenario:
+    """The classic Sally-Anne false-belief test (Baron-Cohen et al., 1985)."""
+    sc = Scenario(sid, depth=3, trust="credulous")
+    sc.delete()
+    sc = Scenario(sid, depth=3, trust="credulous")
+    sc._register("Sally", "Anne")
+    sc.enter(["Sally", "Anne"], "room", text="Sally and Anne are in the room.")
+    sc.say("Sally", "room", "marble", "basket", changes_world=True, text="Sally puts her marble in the basket.")
+    sc.exit("Sally", text="Sally goes out for a walk.")
+    sc.say("Anne", "room", "marble", "box", changes_world=True, text="While Sally is away, Anne moves the marble to the box.")
+    sc.enter(["Sally"], "room", text="Sally comes back. Where will she look for her marble?")
+    return sc

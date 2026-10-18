@@ -22,6 +22,8 @@ user and can read **only its own mind**: theory of mind, not omniscience.
 | Demo video | [`docs/video/demo.mp4`](docs/video/demo.mp4) (captioned walkthrough) |
 | Run locally (no Docker, no API key) | `pip install -r requirements.txt && uvicorn server.app:app` |
 
+![SecondOrder](docs/img/hero.png)
+
 ![The Mind Theater](docs/img/theater.png)
 *The Mind Theater, replayed from FalkorDB with time-travel queries. Orbs are agents in their channels. Each orb's ring is its own belief, and its
 moons are what it thinks each other agent believes (green = true, red = false). Events beam only to the agents who witnessed them.*
@@ -68,6 +70,9 @@ moons are what it thinks each other agent believes (green = true, red = false). 
   back and Maya's false belief disappears. The ACL demo shows Shipping's `GRAPH.RO_QUERY` on Escalation's mind refused.
 - **Live event composer:** type *"Escalation privately tells Billing the replacement was approved"*. Claude extracts perception events,
   FalkorDB routes them into exactly the minds that witnessed them, and the changed perspectives pulse.
+- **Ask about any mind:** *"What does Escalation think Maya believes about the refund?"* Claude only maps the words to a perspective chain and
+  entity, and one fixed Cypher read answers with the evidence. Questions outside the graph get "That isn't in the graph".
+- **Mind inspector:** click any orb in the theater to open that agent's mind graph: its beliefs, its model of every other agent, and why.
 - **Company brain:** a decision changed in a thread only 3 of 7 people saw. `who_knows`, second-order false beliefs ("Dara thinks Eli
   believes…") and the announcement planner.
 - **Hi-ToM explorer:** any of the 1,200 questions, with the minds built live, each nested perspective's belief at every step, the reasoning read

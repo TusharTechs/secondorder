@@ -221,7 +221,7 @@ def _belief_map(sc):
     for a in sc.agents:
         for p in sc.perspectives(a):
             for b in p["beliefs"]:
-                out[(p["chain"], b["entity"])] = (b["value"], b["t"])
+                out[(p["chain"], b["entity"])] = b["value"]
     return out
 
 
@@ -289,7 +289,15 @@ def compose_event(sid: str, req: EventReq):
             applied.append({**e, "error": str(ex)[:200]})
         sc = Scenario.load(sid)
     after = _belief_map(sc)
-    changed = sorted({c for (c, ent), v in after.items() if before.get((c, ent)) != v})
+
+    def eff(m, c, ent):  # effective (inherited) value, same rule as the Cypher read
+        parts = c.split(">")
+        for k in range(len(parts), 0, -1):
+            v = m.get((">".join(parts[:k]), ent))
+            if v is not None:
+                return v
+        return None
+    changed = sorted({c for (c, ent) in after if eff(after, c, ent) != eff(before, c, ent)})
     return {"events": applied, "changed": changed, **_snapshot(sid)}
 
 

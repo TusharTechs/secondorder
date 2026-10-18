@@ -309,7 +309,7 @@ async function drawGraph() {
   const agent = ST ? ST.agents.slice().sort((a, b) => (ST.minds[b] || []).length - (ST.minds[a] || []).length)[0] : "Billing";
   const d = await api(`/api/support/graph?agent=${agent}`);
   const el = $("#rawgraph"); el.innerHTML = "";
-  ForceGraph()(el).width(el.clientWidth).height(470).backgroundColor("#0E0E12")
+  const fg = ForceGraph()(el).width(el.clientWidth).height(470).backgroundColor("#0E0E12").cooldownTicks(120).onEngineStop(() => fg.zoomToFit(500, 30))
     .graphData({nodes: d.nodes, links: d.links})
     .nodeLabel(n => n.kind === "value" ? `${n.entity} = ${n.value}` : `Perspective ${n.id}`)
     .nodeColor(n => n.kind === "value" ? (n.true ? "#10b981" : "#FF5454") : (n.depth === 1 ? "#C15CFF" : "#7466FF"))

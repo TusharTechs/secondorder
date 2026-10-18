@@ -1,0 +1,15 @@
+name: ci
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install -r requirements.txt pytest numpy && pip install -e .
+      - run: FALKORDB_LITE_PATH=/tmp/so_ci.db python -m pytest -q tests
+      - name: Hi-ToM through SecondOrder (first 120 questions) and the benchmark's own oracle
+        run: |
+          FALKORDB_LITE_PATH=/tmp/so_ci.db python -m eval.run_graph --limit 120 --name ci_graph
+          FALKORDB_LITE_PATH=/tmp/so_ci.db python examples/quickstart.py

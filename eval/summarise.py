@@ -63,7 +63,7 @@ for name, color, fn, idxs in series_defs:
                  [b[o][0] for o in ORDERS]))
 
 ps = load("paraphrase_scored.json") or []
-para = (sum(r["secondorder"] == r["gold"] for r in ps), sum(r["opus"] == r["gold"] for r in ps), len(ps)) if ps else None
+para = (sum(r["secondorder"] == ref.get(r["idx"], r["gold"]) for r in ps), sum(r["opus"] == ref.get(r["idx"], r["gold"]) for r in ps), len(ps)) if ps else None
 
 # cost / latency
 lat = [r["stats"] for r in graph.values() if r.get("stats")]
@@ -97,7 +97,7 @@ summary["table_html"] = (
 summary["side_html"] = (
     f"<div class='space-y-3'><div><div class='text-3xl font-bold text-sky-300'>{rows[0][2]:.1f}%</div><div class='text-xs text-slate-400'>SecondOrder vs. the released labels</div></div>"
     f"<div><div class='text-3xl font-bold text-sky-300'>{rows[0][5]:.1f}%</div><div class='text-xs text-slate-400'>SecondOrder vs. Hi-ToM's own reference Oracle code ({rows[0][1]} questions, none excluded)</div></div>"
-    + (f"<div><div class='text-xl font-bold'>{para[0]} vs {para[1]} / {para[2]}</div><div class='text-xs text-slate-400'>free natural prose (Claude-paraphrased stories): SecondOrder + Claude extraction vs. Claude Opus 5.5 alone</div></div>" if para else "") +
+    + (f"<div><div class='text-xl font-bold'>{para[0]} vs {para[1]} / {para[2]}</div><div class='text-xs text-slate-400'>free natural prose (Claude-paraphrased stories, reference labels): SecondOrder + Claude extraction vs. Claude Opus 5.5 alone</div></div>" if para else "") +
     f"<div><div class='text-xl font-bold'>6 graphs</div><div class='text-xs text-slate-400'>per story: 1 world graph + 1 mind graph per agent, nested perspectives inside</div></div>"
     f"<div><div class='text-xl font-bold'>~1.5 ms</div><div class='text-xs text-slate-400'>median time to route one event into every affected mind (embedded FalkorDB)</div></div>"
     f"<div><div class='text-xl font-bold'>0 tokens</div><div class='text-xs text-slate-400'>to answer a nested-belief question once memory is built (a Cypher read) vs. ~{summary['side']['opus_avg_output_tokens']} output tokens per question for Opus 5.5 reasoning from the transcript</div></div></div>")
